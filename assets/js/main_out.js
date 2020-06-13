@@ -211,10 +211,62 @@
         if (data.build) ws.send(data.build());
         else ws.send(data);
     }
+
+
+    var list = [];
+    var readIndex = 0;
+    var writeIndex = 0;
+
+    const maxListlength = 200000;
+
+    function addtoList(data){
+        if(list.length + data.length > maxListlength){
+            //list.splace , whatever
+
+        }
+    }
+
+    function writetoTextfile(string){
+        var text = string;
+            blob = new Blob([text], { type: 'text/plain' }),
+            anchor = document.createElement('a');
+
+        anchor.download = "hello.txt";
+        anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+        anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+        anchor.click();
+    }
+
+
+    //takes in an array of arraybufers
+    function _arrayBufferToBase64( list) {
+        var binary = '';
+        //iterate through an arrray of arraybuffers
+        for(let x = 0;x <list.length; x++) {
+            let buffer = list[x];
+            var bytes = new Uint8Array( buffer );
+            var len = bytes.byteLength;
+
+            for (var i = 0; i < len; i++) {
+                binary += String.fromCharCode( bytes[ i ] );
+            }
+
+        }
+        return window.btoa( binary );
+    }
+
+
     function wsMessage(data) {
         syncUpdStamp = Date.now();
         var reader = new Reader(new DataView(data.data), 0, true);
         var packetId = reader.getUint8();
+        let oherbuffer = new ArrayBuffer(2);
+        let buffer = new Uint16Array(oherbuffer);
+        buffer[0] = data.data.byteLength;
+        list.push(data.data);
+        list.push(oherbuffer);
+
+        console.log(data.data.byteLength);
         switch (packetId) {
             case 0x10: // update nodes
                 var killer, killed, id, node, x, y, s, flags, cell,
