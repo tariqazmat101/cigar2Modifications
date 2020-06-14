@@ -217,13 +217,12 @@
     var readIndex = 0;
     var writeIndex = 0;
 
-    const maxListlength = 200000;
+    const maxListlength = 2000;
 
-    function addtoList(data){
-        if(list.length + data.length > maxListlength){
-            //list.splace , whatever
-
-        }
+    //takes in an obj{buffer,lengthofbuffer)
+    function addtoList(obj){
+        list.splice(writeIndex,1,obj);
+        writeIndex = (writeIndex+1) % maxListlength;
     }
 
     function writetoTextfile(string){
@@ -237,18 +236,28 @@
         anchor.click();
     }
 
+    function outputReplay() {
+        var buffer = list;
+        list = [];
+        writetoTextfile(_arrayBufferToBase64(buffer));
+        console.log(buffer);
+        console.log(list);
+    }
 
     //takes in an array of arraybufers
     function _arrayBufferToBase64( list) {
         var binary = '';
         //iterate through an arrray of arraybuffers
         for(let x = 0;x <list.length; x++) {
-            let buffer = list[x];
-            var bytes = new Uint8Array( buffer );
-            var len = bytes.byteLength;
+            let obj = list[x]; //obj = {buffer, bytelength(also an arraybuffer)
 
-            for (var i = 0; i < len; i++) {
-                binary += String.fromCharCode( bytes[ i ] );
+            for(const property in obj) {
+                var bytes = new Uint8Array(obj[property]);
+                var len = bytes.byteLength;
+
+                for (var i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
             }
 
         }
@@ -260,13 +269,15 @@
         syncUpdStamp = Date.now();
         var reader = new Reader(new DataView(data.data), 0, true);
         var packetId = reader.getUint8();
-        let oherbuffer = new ArrayBuffer(2);
-        let buffer = new Uint16Array(oherbuffer);
+        let byteLengthBuffer= new ArrayBuffer(2);
+        let buffer = new Uint16Array(byteLengthBuffer);
         buffer[0] = data.data.byteLength;
-        list.push(data.data);
-        list.push(oherbuffer);
 
-        console.log(data.data.byteLength);
+        let obj = {length:byteLengthBuffer,buffer:data.data};
+        addtoList(obj);
+        //list.push(obj);
+
+        //console.log(data.data.byteLength);
         switch (packetId) {
             case 0x10: // update nodes
                 var killer, killed, id, node, x, y, s, flags, cell,
@@ -399,7 +410,7 @@
             case 0x63: // chat message
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
-                
+
                 var name = reader.getStringUTF8().trim();
                 var reg = /\{([\w]+)\}/.exec(name);
                 if (reg) name = name.replace(reg[0], "").trim();
@@ -621,7 +632,7 @@
         scaleBack(ctx);
         ctx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
     }
-    
+
     function drawChat() {
         if (chat.messages.length === 0 && settings.showChat)
             return chat.visible = false;
@@ -823,7 +834,7 @@
         mainCtx.closePath();
         mainCtx.fill();
 
-        // draw name above user's pos if he has a cell on the screen 
+        // draw name above user's pos if he has a cell on the screen
         var cell = null;
         for (var i = 0, l = cells.mine.length; i < l; i++)
             if (cells.byId.hasOwnProperty(cells.mine[i])) {
@@ -900,7 +911,7 @@
         cacheCleanup();
         wHandle.requestAnimationFrame(drawGame);
     }
-    
+
     function cellSort(a, b) {
         return a.s === b.s ? a.id - b.id : a.s - b.s;
     }
@@ -1037,7 +1048,7 @@
             if (this.destroyed)
                 ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
-            
+
             if (!this.ejected && 20 < this.s)
                 ctx.stroke();
             ctx.fill();
@@ -1185,7 +1196,7 @@
             var width = 0;
             for (var i = 0; i < value.length; i++)
                 width += canvases[value[i]].width - 2 * cache.lineWidth;
-            
+
             ctx.scale(correctionScale, correctionScale);
             x /= correctionScale;
             y /= correctionScale;
@@ -1258,6 +1269,10 @@
                     if (isTyping || escOverlayShown || pressed.r) break;
                     wsSend(UINT8_CACHE[23]);
                     pressed.r = true;
+
+
+                    //ALSO write to textfile
+                    outputReplay();
                     break;
                 case 84: // T
                     if (isTyping || escOverlayShown || pressed.t) break;
