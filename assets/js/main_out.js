@@ -2,6 +2,54 @@
     if (navigator.appVersion.indexOf("MSIE") != -1)
 	   alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
+
+    var txt = '';
+    var buffer;
+    messages =  [];
+    numbers = [];
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function(){
+        if(xmlhttp.status == 200 && xmlhttp.readyState == 4){
+            txt = xmlhttp.responseText;
+            console.log(txt);
+            buffer = _base64ToArrayBuffer(txt);
+            console.log(buffer);
+            //Once it is ready, call the wsMessage function to draw stuff onto the canvas
+            const view = new DataView(buffer);
+            let start = 0;
+
+
+            // while(start + 2 <= buffer.byteLength) {
+            //     numofBytes = view.getUint16(start, true);
+            //     messages.push(buffer.slice(start + 2, start + numofBytes + 2 + 1));
+            //     start += numofBytes;
+            // }
+            for(let i =0 ; i < 100; i++){
+                    numofBytes = view.getUint16(start, true);
+                    numbers.push(numofBytes);
+                    messages.push(buffer.slice(start + 2, start + numofBytes + 2));
+                    start += numofBytes + 2;
+            }
+
+
+            console.log("HI");
+        }
+    };
+
+    xmlhttp.open("GET","hello.txt",true);
+    xmlhttp.send();
+
+    function _base64ToArrayBuffer(base64) {
+        var binary_string = window.atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+
     Date.now || (Date.now = function() {
         return (+new Date).getTime();
     });
@@ -147,70 +195,10 @@
         debug: function(a) { if (log.verbosity <= 3) return; console.debug(a); }
     };
 
-    var wsUrl = null,
-        SKIN_URL = "./skins/",
-        USE_HTTPS = "https:" == wHandle.location.protocol,
-        PI_2 = Math.PI * 2,
-        SEND_254 = new Uint8Array([254, 6, 0, 0, 0]),
-        SEND_255 = new Uint8Array([255, 1, 0, 0, 0]),
-        UINT8_CACHE = {
-            1: new Uint8Array([1]),
-            17: new Uint8Array([17]),
-            21: new Uint8Array([21]),
-            18: new Uint8Array([18]),
-            19: new Uint8Array([19]),
-            22: new Uint8Array([22]),
-            23: new Uint8Array([23]),
-            24: new Uint8Array([24]),
-            254: new Uint8Array([254])
-        };
 
-    function wsCleanup() {
-        if (!ws) return;
-        log.debug("ws cleanup trigger");
-        ws.onopen = null;
-        ws.onmessage = null;
-        ws.close();
-        ws = null;
-    }
-    function wsInit(url) {
-        if (ws) {
-            log.debug("ws init on existing conn");
-            wsCleanup();
-        }
-        wjQuery("#connecting").show();
-        ws = new WebSocket(`ws${USE_HTTPS ? "s" : ""}://${wsUrl = url}`);
-        ws.binaryType = "arraybuffer";
-        ws.onopen = wsOpen;
-        ws.onmessage = wsMessage;
-        ws.onerror = wsError;
-        ws.onclose = wsClose;
-    }
-    function wsOpen() {
-        disconnectDelay = 1000;
-        wjQuery("#connecting").hide();
-        wsSend(SEND_254);
-        wsSend(SEND_255);
-        log.debug(`ws connected, using https: ${USE_HTTPS}`);
-    }
-    function wsError(error) {
-        log.warn(error);
-    }
-    function wsClose(e) {
-        log.debug(`ws disconnected ${e.code} '${e.reason}'`);
-        wsCleanup();
-        gameReset();
-        setTimeout(function() {
-            if (ws && ws.readyState === 1) return;
-            wsInit(wsUrl);
-        }, disconnectDelay *= 1.5);
-    }
-    function wsSend(data) {
-        if (!ws) return;
-        if (ws.readyState !== 1) return;
-        if (data.build) ws.send(data.build());
-        else ws.send(data);
-    }
+
+
+
 
 
     var list = [];
@@ -447,28 +435,7 @@
                 break;
         }
     }
-    function sendMouseMove(x, y) {
-        var writer = new Writer(true);
-        writer.setUint8(0x10);
-        writer.setUint32(x);
-        writer.setUint32(y);
-        writer._b.push(0, 0, 0, 0);
-        wsSend(writer);
-    }
-    function sendPlay(name) {
-        log.debug("play trigger");
-        var writer = new Writer(true);
-        writer.setUint8(0x00);
-        writer.setStringUTF8(name);
-        wsSend(writer);
-    }
-    function sendChat(text) {
-        var writer = new Writer();
-        writer.setUint8(0x63);
-        writer.setUint8(0);
-        writer.setStringUTF8(text);
-        wsSend(writer);
-    }
+
 
     function gameReset() {
         cleanupObject(cells);
@@ -578,47 +545,6 @@
         esc: false
     };
 
-    if (null !== wHandle.localStorage) {
-        wjQuery(window).load(function() {
-            wjQuery(".save").each(function() {
-                var id = wjQuery(this).data("box-id");
-                var value = wHandle.localStorage.getItem("checkbox-" + id);
-                if (value && value == "true" && 0 != id) {
-                    wjQuery(this).prop("checked", "true");
-                    wjQuery(this).trigger("change");
-                } else if (id == 0 && value != null)
-                    wjQuery(this).val(value);
-            });
-            wjQuery(".save").change(function() {
-                var id = wjQuery(this).data("box-id");
-                var value = (id == 0) ? wjQuery(this).val() : wjQuery(this).prop("checked");
-                wHandle.localStorage.setItem("checkbox-" + id, value);
-            });
-        });
-    }
-    wjQuery.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "checkdir.php",
-        data: { "action": "getSkins" },
-        success: function(data) {
-            var stamp = Date.now();
-            response = JSON.parse(data.names);
-            for (var i = 0; i < response.length; i++)
-                knownSkins[response[i]] = stamp;
-            for (var i in knownSkins)
-                if (knownSkins[i] !== stamp) delete knownSkins[i];
-        }
-    });
-
-    function hideESCOverlay() {
-        escOverlayShown = false;
-        wjQuery("#overlays").hide();
-    }
-    function showESCOverlay() {
-        escOverlayShown = true;
-        wjQuery("#overlays").fadeIn(300);
-    }
 
     function toCamera(ctx) {
         ctx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
@@ -1224,103 +1150,7 @@
         mainCtx = mainCanvas.getContext("2d");
         chatBox = document.getElementById("chat_textbox");
         mainCanvas.focus();
-        function handleScroll(event) {
-            mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
-            1 > mouseZ && (mouseZ = 1);
-            mouseZ > 4 / mouseZ && (mouseZ = 4 / mouseZ);
-        }
-        if (/firefox/i.test(navigator.userAgent))
-            document.addEventListener("DOMMouseScroll", handleScroll, false);
-        else
-            document.body.onmousewheel = handleScroll;
-        wHandle.onkeydown = function(event) {
-            switch (event.keyCode) {
-                case 13: // enter
-                    if (escOverlayShown) break;
-                    if (!settings.showChat) break;
-                    if (isTyping) {
-                        chatBox.blur();
-                        var chattxt = chatBox.value;
-                        if (chattxt.length > 0) sendChat(chattxt);
-                        chatBox.value = "";
-                    } else chatBox.focus();
-                    break;
-                case 32: // space
-                    if (isTyping || escOverlayShown || pressed.space) break;
-                    wsSend(UINT8_CACHE[17]);
-                    pressed.space = true;
-                    break;
-                case 87: // W
-                    if (isTyping || escOverlayShown) break;
-                    wsSend(UINT8_CACHE[21]);
-                    pressed.w = true;
-                    break;
-                case 81: // Q
-                    if (isTyping || escOverlayShown || pressed.q) break;
-                    wsSend(UINT8_CACHE[18]);
-                    pressed.q = true;
-                    break;
-                case 69: // E
-                    if (isTyping || escOverlayShown || pressed.e) break;
-                    wsSend(UINT8_CACHE[22]);
-                    pressed.e = true;
-                    break;
-                case 82: // R
-                    if (isTyping || escOverlayShown || pressed.r) break;
-                    wsSend(UINT8_CACHE[23]);
-                    pressed.r = true;
 
-
-                    //ALSO write to textfile
-                    outputReplay();
-                    break;
-                case 84: // T
-                    if (isTyping || escOverlayShown || pressed.t) break;
-                    wsSend(UINT8_CACHE[24]);
-                    pressed.t = true;
-                    break;
-                case 80: // P
-                    if (isTyping || escOverlayShown || pressed.p) break;
-                    wsSend(UINT8_CACHE[25]);
-                    pressed.p = true;
-                    break;
-                case 27: // esc
-                    if (pressed.esc) break;
-                    pressed.esc = true;
-                    if (escOverlayShown) hideESCOverlay();
-                    else showESCOverlay();
-                    break;
-            }
-        };
-        wHandle.onkeyup = function(event) {
-            switch (event.keyCode) {
-                case 32: // space
-                    pressed.space = false;
-                    break;
-                case 87: // W
-                    pressed.w = false;
-                    break;
-                case 81: // Q
-                    if (pressed.q) wsSend(UINT8_CACHE[19]);
-                    pressed.q = false;
-                    break;
-                case 69: // E
-                    pressed.e = false;
-                    break;
-                case 82: // R
-                    pressed.r = false;
-                    break;
-                case 84: // T
-                    pressed.t = false;
-                    break;
-                case 80: // P
-                    pressed.p = false;
-                    break;
-                case 27: // esc
-                    pressed.esc = false;
-                    break;
-            }
-        };
         chatBox.onblur = function() {
             isTyping = false;
             drawChat();
@@ -1333,13 +1163,7 @@
             mouseX = event.clientX;
             mouseY = event.clientY;
         };
-        setInterval(function() {
-            // send mouse update
-            sendMouseMove(
-                (mouseX - mainCanvas.width / 2) / cameraZ + cameraX,
-                (mouseY - mainCanvas.height / 2) / cameraZ + cameraY
-            );
-        }, 40);
+
         wHandle.onresize = function() {
             var cW = mainCanvas.width = wHandle.innerWidth,
                 cH = mainCanvas.height = wHandle.innerHeight;
@@ -1348,7 +1172,6 @@
         wHandle.onresize();
         log.info(`init done in ${Date.now() - LOAD_START}ms`);
         gameReset();
-        showESCOverlay();
 
         if (settings.allowGETipSet && wHandle.location.search) {
             var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
@@ -1390,16 +1213,6 @@
         stats.maxScore = 0;
         hideESCOverlay();
     };
-    wHandle.play = function(a) {
-        sendPlay(a);
-        hideESCOverlay();
-    };
-    wHandle.openSkinsList = function() {
-        if (wjQuery("#inPageModalTitle").text() === "Skins") return;
-        wjQuery.get("include/gallery.php").then(function(data) {
-            wjQuery("#inPageModalTitle").text("Skins");
-            wjQuery("#inPageModalBody").html(data);
-        });
-    };
+
     wHandle.onload = init;
 })(window, window.jQuery);
