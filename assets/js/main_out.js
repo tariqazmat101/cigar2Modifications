@@ -24,7 +24,7 @@
             //     messages.push(buffer.slice(start + 2, start + numofBytes + 2 + 1));
             //     start += numofBytes;
             // }
-            for(let i =0 ; i < 100; i++){
+            for(let i = 0 ; i < 1500; i++){
                     numofBytes = view.getUint16(start, true);
                     numbers.push(numofBytes);
                     messages.push(buffer.slice(start + 2, start + numofBytes + 2));
@@ -32,12 +32,31 @@
             }
 
 
-            console.log("HI");
+            // //call the Wsmessage function
+            // setInterval(function(){drawGame();},900);
+            // for(let x = 0; x < messages.length; x++){
+            //     setInterval(function(){ wsMessage(messages[x]) , 60});
+            //   //  wsMessage(messages[x]);
+            //   //  wHandle.requestAnimationFrame(drawGame);
+            // }
+            render()
+
         }
     };
 
-    xmlhttp.open("GET","hello.txt",true);
-    xmlhttp.send();
+    var messageFrame = 0;
+
+    function render(){
+        wsMessage(messages[messageFrame]);
+        messageFrame++;
+        wHandle.requestAnimationFrame(drawGame);
+        capturer.capture(mainCanvas);
+    }
+
+
+
+
+
 
     function _base64ToArrayBuffer(base64) {
         var binary_string = window.atob(base64);
@@ -150,7 +169,9 @@
         this._e = littleEndian;
         if (view) this.repurpose(view, offset);
     }
-    Reader.prototype = {
+        PI_2 = Math.PI * 2;
+
+        Reader.prototype = {
         reader: true,
         repurpose: function(view, offset) {
             this.view = view;
@@ -230,6 +251,7 @@
         writetoTextfile(_arrayBufferToBase64(buffer));
         console.log(buffer);
         console.log(list);
+
     }
 
     //takes in an array of arraybufers
@@ -253,21 +275,21 @@
     }
 
 
+    var capturer = new CCapture( {
+        format: 'webm',
+        framerate:60,
+        verbose:true
+    } );
+
+
     function wsMessage(data) {
         syncUpdStamp = Date.now();
-        var reader = new Reader(new DataView(data.data), 0, true);
+        var reader = new Reader(new DataView(data), 0, true);
         var packetId = reader.getUint8();
-        let byteLengthBuffer= new ArrayBuffer(2);
-        let buffer = new Uint16Array(byteLengthBuffer);
-        buffer[0] = data.data.byteLength;
-
-        let obj = {length:byteLengthBuffer,buffer:data.data};
-        addtoList(obj);
-        //list.push(obj);
 
         //console.log(data.data.byteLength);
         switch (packetId) {
-            case 0x10: // update nodes
+            case 0x10: // update nodes (16)
                 var killer, killed, id, node, x, y, s, flags, cell,
                     updColor, updName, updSkin, count, color, name, skin;
 
@@ -325,21 +347,21 @@
                         cells.byId[killed].destroy(null);
                 }
                 break;
-            case 0x11: // update pos
+            case 0x11: // update pos(17)
                 targetX = reader.getFloat32();
                 targetY = reader.getFloat32();
                 targetZ = reader.getFloat32();
                 break;
-            case 0x12: // clear all
+            case 0x12: // clear all(18)
                 for (var i in cells.byId)
                     cells.byId[i].destroy(null);
-            case 0x14: // clear my cells
+            case 0x14: // clear my cells(20)
                 cells.mine = [];
                 break;
-            case 0x15: // draw line
+            case 0x15: // draw line(21)
                 log.warn("got packer 0x15 (draw line) which is unsupported");
                 break;
-            case 0x20: // new cell
+            case 0x20: // new cell(32)
                 cells.mine.push(reader.getUint32());
                 break;
             case 0x30: // text list
@@ -363,7 +385,7 @@
                     });
                 drawLeaderboard();
                 break;
-            case 0x32: // pie chart
+            case 0x32: // pie chart(50)
                 leaderboard.items = [];
                 leaderboard.type = "pie";
 
@@ -372,7 +394,7 @@
                     leaderboard.items.push(reader.getFloat32());
                 drawLeaderboard();
                 break;
-            case 0x40: // set border
+            case 0x40: // set border(64)
                 border.left = reader.getFloat64();
                 border.top = reader.getFloat64();
                 border.right = reader.getFloat64();
@@ -381,7 +403,7 @@
                 border.height = border.bottom - border.top;
                 border.centerX = (border.left + border.right) / 2;
                 border.centerY = (border.top + border.bottom) / 2;
-                if (data.data.byteLength === 33) break;
+                if (data.byteLength === 33) break;
                 if (!mapCenterSet) {
                     mapCenterSet = true;
                     cameraX = targetX = border.centerX;
@@ -391,11 +413,10 @@
                 reader.getUint32(); // game type
                 if (!/MultiOgar|OgarII/.test(reader.getStringUTF8()) || stats.pingLoopId) break;
                 stats.pingLoopId = setInterval(function() {
-                    wsSend(UINT8_CACHE[254]);
                     stats.pingLoopStamp = Date.now();
                 }, 2000);
                 break;
-            case 0x63: // chat message
+            case 0x63: // chat message(99)
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
 
@@ -426,7 +447,7 @@
                 break;
             case 0xFE: // server stat
                 stats.info = JSON.parse(reader.getStringUTF8());
-                stats.latency = syncUpdStamp - stats.pingLoopStamp;
+                stats.latency = 69;
                 drawStats();
                 break;
             default:
@@ -434,6 +455,7 @@
                 wsCleanup();
                 break;
         }
+
     }
 
 
@@ -777,7 +799,9 @@
         mainCtx.restore();
     }
 
+
     function drawGame() {
+
         stats.framesPerSecond += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.framesPerSecond) / 10;
         syncAppStamp = Date.now();
 
@@ -835,7 +859,10 @@
         mainCtx.restore();
 
         cacheCleanup();
-        wHandle.requestAnimationFrame(drawGame);
+        //I wont need this because i havea parent method that calls request animation frame
+       //wHandle.requestAnimationFrame(drawGame);
+
+       render();
     }
 
     function cellSort(a, b) {
@@ -1159,10 +1186,6 @@
             isTyping = true;
             drawChat();
         };
-        mainCanvas.onmousemove = function(event) {
-            mouseX = event.clientX;
-            mouseY = event.clientY;
-        };
 
         wHandle.onresize = function() {
             var cW = mainCanvas.width = wHandle.innerWidth,
@@ -1173,12 +1196,9 @@
         log.info(`init done in ${Date.now() - LOAD_START}ms`);
         gameReset();
 
-        if (settings.allowGETipSet && wHandle.location.search) {
-            var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
-            if (div) wsInit(`${div[1]}:${div[2]}`);
-        }
-
-        window.requestAnimationFrame(drawGame);
+        xmlhttp.open("GET","hello.txt",false);
+        xmlhttp.send();
+        //window.requestAnimationFrame(drawGame);
     }
     wHandle.setserver = function(arg) {
         if (wsUrl === arg) return;
@@ -1209,7 +1229,6 @@
         settings.showMinimap = !a;
     };
     wHandle.spectate = function(a) {
-        wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;
         hideESCOverlay();
     };
