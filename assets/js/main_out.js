@@ -6,6 +6,12 @@
     var txt = '';
     var buffer;
     messages =  [];
+
+    let numofBytes = 0;
+    var totalbytesRead = 0;
+    let bytesremaining =  0;
+
+
     numbers = [];
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function(){
@@ -24,8 +30,13 @@
             //     messages.push(buffer.slice(start + 2, start + numofBytes + 2 + 1));
             //     start += numofBytes;
             // }
+
             for(let i = 0 ; i < 1500; i++){
                     numofBytes = view.getUint16(start, true);
+                    totalbytesRead += numofBytes + 2;
+                    bytesremaining =  buffer.byteLength - totalbytesRead;
+                    console.log(bytesremaining);
+
                     numbers.push(numofBytes);
                     messages.push(buffer.slice(start + 2, start + numofBytes + 2));
                     start += numofBytes + 2;
@@ -39,7 +50,7 @@
             //   //  wsMessage(messages[x]);
             //   //  wHandle.requestAnimationFrame(drawGame);
             // }
-            render()
+            render();
 
         }
     };
