@@ -56,6 +56,7 @@
     var messageFrame = 0;
 
     function render(){
+        if(messageFrame == messages.length) throw new Error('Replayer has rendered');
         wsMessage(messages[messageFrame]);
         messageFrame++;
         wHandle.requestAnimationFrame(drawGame);
@@ -936,8 +937,6 @@
         born: null, updated: null, dead: null, // timestamps
         destroy: function(killerId) {
             delete cells.byId[this.id];
-            if (cells.mine.remove(this.id) && cells.mine.length === 0)
-                showESCOverlay();
             this.destroyed = true;
             this.dead = syncUpdStamp;
             if (killerId && !this.diedBy)
