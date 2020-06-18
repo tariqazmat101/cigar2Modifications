@@ -5,7 +5,7 @@
 
     var txt = '';
     var buffer;
-    messages =  [];
+    var messages =  [];
 
     let numofBytes = 0;
     var totalbytesRead = 0;
@@ -21,7 +21,6 @@
             buffer = _base64ToArrayBuffer(txt);
             console.log(buffer);
             //Once it is ready, call the wsMessage function to draw stuff onto the canvas
-            const view = new DataView(buffer);
             let start = 0;
 
 
@@ -31,16 +30,16 @@
             //     start += numofBytes;
             // }
 
-            for(let i = 0 ; i < 1500; i++){
-                    numofBytes = view.getUint16(start, true);
-                    totalbytesRead += numofBytes + 2;
-                    bytesremaining =  buffer.byteLength - totalbytesRead;
-                    console.log(bytesremaining);
-
-                    numbers.push(numofBytes);
-                    messages.push(buffer.slice(start + 2, start + numofBytes + 2));
-                    start += numofBytes + 2;
-            }
+            // for(let i = 0 ; i < 1500; i++){
+            //         numofBytes = view.getUint16(start, true);
+            //         totalbytesRead += numofBytes + 2;
+            //         bytesremaining =  buffer.byteLength - totalbytesRead;
+            //         console.log(bytesremaining);
+            //
+            //         numbers.push(numofBytes);
+            //         messages.push(buffer.slice(start + 2, start + numofBytes + 2));
+            //         start += numofBytes + 2;
+            // }
 
 
             // //call the Wsmessage function
@@ -50,7 +49,6 @@
             //   //  wsMessage(messages[x]);
             //   //  wHandle.requestAnimationFrame(drawGame);
             // }
-            render();
 
         }
     };
@@ -1207,8 +1205,38 @@
         log.info(`init done in ${Date.now() - LOAD_START}ms`);
         gameReset();
 
+
+        var numofBytes = 0;
+        var totalbytesRead = 0;
+
         xmlhttp.open("GET","hello.txt",false);
         xmlhttp.send();
+        console.log("Xml http request has been processed.");
+        let start = 0;
+
+
+        // while(start + 2 <= buffer.byteLength) {
+        //     numofBytes = view.getUint16(start, true);
+        //     messages.push(buffer.slice(start + 2, start + numofBytes + 2 + 1));
+        //     start += numofBytes;
+        // }
+
+        const view =  new DataView(buffer);
+        bytesremaining =  buffer.byteLength - totalbytesRead;
+        while(bytesremaining){
+            numofBytes = view.getUint16(start, true);
+            totalbytesRead += numofBytes + 2;
+            bytesremaining =  buffer.byteLength - totalbytesRead;
+            console.log("bytes remaining " + bytesremaining);
+
+            numbers.push(numofBytes);
+            messages.push(buffer.slice(start + 2, start + numofBytes + 2));
+            start += numofBytes + 2;
+        }
+        render();
+
+        console.log('HI world');
+
         //window.requestAnimationFrame(drawGame);
     }
     wHandle.setserver = function(arg) {
