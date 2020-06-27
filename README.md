@@ -14,10 +14,10 @@ Within this repository, you will find 3 branches:
 ### The Replayer Branch 
 This branch contains code that allows the client to record 10 seconds of gameplay. Once a user clicks the 'r' key, the client immediately outputs a textfile of server instructions. 
 
-###The Replay Branch 
+### The Replay Branch 
 Once you have the textfile from the Replayer branch, you feed it into this branch to see realtime playback of your game. 
 
-**Both of these branches are work in progress, but you are free to try to them out ** 
+** Both of these branches are work in progress, but you are free to try to them out ** 
 
 ### The MasterBranch 
 
