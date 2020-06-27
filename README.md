@@ -7,9 +7,9 @@ https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workf
 take care
 
 Within this repository, you will find 3 branches:
-1.the replayer branch 
-2.the replay branch
-3.the masterbranch 
+1. the replayer branch 
+2. the replay branch
+3. the masterbranch 
 
 ### The Replayer Branch 
 This branch contains code that allows the client to record 10 seconds of gameplay. Once a user clicks the 'r' key, the client immediately outputs a textfile of server instructions. 
