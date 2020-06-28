@@ -18,8 +18,9 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/index.css" rel="stylesheet">
 
+    <script src="https://kit.fontawesome.com/2dda43642d.js" crossorigin="anonymous"></script>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="assets/js/main_out.js"></script>
+    <script src="assets/js/main_out.js" defer></script>
 </head>
 
 <body>
@@ -118,8 +119,14 @@
             <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the connection.</p>
         </div>
     </div>
+    <div class = "btn canvasButtons toggle" id = "togglelb" onclick="toggleleaderboard();">
+        <i id="friendbutton" class="fas fa-chart-pie icon-large" style="margin-top:5px"></i>
+    </div>
+    <canvas id="leaderboardcanvas" width="200" height="240" style="">
 
+    </canvas>
     <canvas id="canvas" width="800" height="600"></canvas>
+
     <input type="text" id="chat_textbox" placeholder="Press enter to chat" maxlength="200" />
     <div style="font-family:'Ubuntu'">&nbsp;</div>
 

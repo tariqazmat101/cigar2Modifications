@@ -162,6 +162,7 @@
             22: new Uint8Array([22]),
             23: new Uint8Array([23]),
             24: new Uint8Array([24]),
+            69: new Uint8Array([69]), // This is a new packetcode that will be sent to the server, it tells the server to change leaderboards
             254: new Uint8Array([254])
         };
 
@@ -441,7 +442,7 @@
     var leaderboard = Object.create({
         type: NaN,
         items: null,
-        canvas: document.createElement("canvas"),
+        canvas: document.getElementById("leaderboardcanvas"),
         teams: ["#F33", "#3F3", "#33F"]
     });
     var chat = Object.create({
@@ -655,31 +656,32 @@
         if (!settings.showNames || leaderboard.items.length === 0)
             return leaderboard.visible = false;
         leaderboard.visible = true;
-        var canvas = leaderboard.canvas;
-        var ctx = canvas.getContext("2d");
+       // var canvas = leaderboard.canvas;
+        var canvas = document.getElementById('leaderboardcanvas');
+        let lbctxt = canvas.getContext("2d");
         var len = leaderboard.items.length;
 
         canvas.width = 200;
         canvas.height = leaderboard.type !== "pie" ? 60 + 24 * len : 240;
 
-        ctx.globalAlpha = .4;
-        ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, 200, canvas.height);
+        lbctxt.globalAlpha = .4;
+        lbctxt.fillStyle = "#000";
+        lbctxt.fillRect(0, 0, 200, canvas.height);
 
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "#FFF";
-        ctx.font = "30px Ubuntu";
-        ctx.fillText("Leaderboard", 100 - ctx.measureText("Leaderboard").width / 2, 40);
+        lbctxt.globalAlpha = 1;
+        lbctxt.fillStyle = "#FFF";
+        lbctxt.font = "30px Ubuntu";
+        lbctxt.fillText("Leaderboard", 100 - lbctxt.measureText("Leaderboard").width / 2, 40);
 
         if (leaderboard.type === "pie") {
             var last = 0;
             for (var i = 0; i < len; i++) {
-                ctx.fillStyle = leaderboard.teams[i];
-                ctx.beginPath();
-                ctx.moveTo(100, 140);
-                ctx.arc(100, 140, 80, last, (last += leaderboard.items[i] * PI_2), false);
-                ctx.closePath();
-                ctx.fill();
+                lbctxt.fillStyle = leaderboard.teams[i];
+                lbctxt.beginPath();
+                lbctxt.moveTo(100, 140);
+                lbctxt.arc(100, 140, 80, last, (last += leaderboard.items[i] * PI_2), false);
+                lbctxt.closePath();
+                lbctxt.fill();
             }
         } else {
             var text, isMe = false, w, start;
@@ -828,10 +830,10 @@
         if (stats.visible)
             mainCtx.drawImage(stats.canvas, 2, height);
         if (leaderboard.visible)
-            mainCtx.drawImage(
-                leaderboard.canvas,
-                mainCanvas.width / viewMult - 10 - leaderboard.canvas.width,
-                10);
+            // mainCtx.drawImage(
+            //     leaderboard.canvas,
+            //     mainCanvas.width / viewMult - 10 - leaderboard.canvas.width,
+            //     10);
         if (chat.visible || isTyping) {
             mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - syncAppStamp + chat.waitUntil, 0) / 1000;
             mainCtx.drawImage(
@@ -848,7 +850,7 @@
         cacheCleanup();
         wHandle.requestAnimationFrame(drawGame);
     }
-    
+
     function cellSort(a, b) {
         return a.s === b.s ? a.id - b.id : a.s - b.s;
     }
@@ -1322,6 +1324,12 @@
         wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;
         hideESCOverlay();
+    };
+    wHandle.toggleleaderboard = function(){
+        //check if teammodefirst
+        //send a special instruction to the server to toggle leaderboard positions
+        wsSend(UINT8_CACHE[69]);
+        console.log("I am printed");
     };
     wHandle.play = function(a) {
         sendPlay(a);
