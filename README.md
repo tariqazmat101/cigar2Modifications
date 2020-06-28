@@ -22,3 +22,5 @@ Once you have the textfile from the Replayer branch, you feed it into this branc
 ### The MasterBranch 
 
 self-explanatory 
+
+I will work on this stuff when I have time, its mostly for fun, I'm not doing it for anyone but myself. 
