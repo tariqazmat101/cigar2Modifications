@@ -33,3 +33,6 @@ Also, check this out Takis, [here](https://aws.amazon.com/free/?all-free-tier.so
 
 I hope you are havomg as much fun with databases/distributed stuff like Apache Spark as I am with cloud computing,docker,nginx,revese proxies,etc 
 happy coding 
+
+----------
+Oh yeah, My exam is finished and the score came back today.  I scored 940/1000 on the AWS solutions architect associate certifiacton :) 
