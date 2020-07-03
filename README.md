@@ -28,8 +28,8 @@ I will work on this stuff when I have time, its mostly for fun, I'm not doing it
 updated july 3rd 2019, I have added a ci/cd pipeline. Any commit to maserbranch will automatically be deployed to the site, cool huh? :) 
 It costs me $1/month to use the pipeline, but it's worth it. I love how easy it is to set up, it only took my <10 minutes!  
 
-(here)(https://medium.com/avmconsulting-blog/automate-static-website-deployment-from-github-to-s3-using-aws-codepipeline-16acca25ebc1#:~:text=Automate%20static%20website%20deployment%20from%20Github%20to%20S3%20using%20AWS%20CodePipeline,-Sithum%20Jayarathna&text=Automatically%20deploy%20changes%20made%20to,git%20repository%20to%20make%20changes.) is the tutorial that I followed. 
-Also, check this out Takis, (here)(https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc) why are you paying for a server when AWS offers a free tier for servers? :)  This is perfect for hosting. 
+[here](https://medium.com/avmconsulting-blog/automate-static-website-deployment-from-github-to-s3-using-aws-codepipeline-16acca25ebc1#:~:text=Automate%20static%20website%20deployment%20from%20Github%20to%20S3%20using%20AWS%20CodePipeline,-Sithum%20Jayarathna&text=Automatically%20deploy%20changes%20made%20to,git%20repository%20to%20make%20changes.) is the tutorial that I followed. 
+Also, check this out Takis, [here](https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc) why are you paying for a server when AWS offers a free tier for servers? :)  This is perfect for hosting. 
 
 I hope you are havomg as much fun with databases/distributed stuff like Apache Spark as I am with cloud computing,docker,nginx,revese proxies,etc 
 happy coding 
