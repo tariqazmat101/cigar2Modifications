@@ -24,7 +24,9 @@ Once you have the textfile from the Replayer branch, you feed it into this branc
 self-explanatory 
 
 I will work on this stuff when I have time, its mostly for fun, I'm not doing it for anyone but myself. 
-updated july 3rd 2019, I have added a ci/cd pipeline, any commit to maserbranch will automatically deployed to the site. This is a very very cool functionality :) 
-It costs me $1/month to use the pipeline, but it's worth it. I especially love how easy it was to set up, it only took my <10 minutes for a such a powerful tool. Granted, this is a propietary tool from AWS that I am using, there are a plethora of open source technoglogies that offer the same functionality and are free. Also, i should really get into the habit of learning about ci/cd pipelines, its the bread and butter for a dev ops engineer. 
 
-I hope you are havomg as much fun with databases/distributed stuff like Apache Spark as I am with cloud computing,docker,nginx,revese proxies. 
+updated july 3rd 2019, I have added a ci/cd pipeline. Any commit to maserbranch will automatically be deployed to the site, cool huh? :) 
+It costs me $1/month to use the pipeline, but it's worth it. I love how easy it is to set up, it only took my <10 minutes!  Granted, this is a propietary tool from AWS that I am using, there are a plethora of open source technoglogies that offer the same functionality and are free. Also, i should really get into the habit of learning about ci/cd pipelines, its the bread and butter for a dev ops engineer. 
+
+I hope you are havomg as much fun with databases/distributed stuff like Apache Spark as I am with cloud computing,docker,nginx,revese proxies,etc 
+happy coding 
