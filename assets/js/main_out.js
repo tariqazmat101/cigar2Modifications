@@ -317,6 +317,7 @@
                 leaderboard.items = [];
                 leaderboard.type = "pie";
 
+
                 var count = reader.getUint32();
                 for (i = 0; i < count; ++i)
                     leaderboard.items.push(reader.getFloat32());
@@ -685,7 +686,7 @@
             }
         } else {
             var text, isMe = false, w, start;
-            ctx.font = "20px Ubuntu";
+            lbctxt.font = "20px Ubuntu";
             for (var i = 0; i < len; i++) {
                 if (leaderboard.type === "text")
                     text = leaderboard.items[i];
@@ -700,8 +701,8 @@
                 ctx.fillStyle = isMe ? "#FAA" : "#FFF";
                 if (leaderboard.type === "ffa")
                     text = (i + 1) + ". " + (text || "An unnamed cell");
-                var start = ((w = ctx.measureText(text).width) > 200) ? 2 : 100 - w * 0.5;
-                ctx.fillText(text, start, 70 + 24 * i);
+                var start = ((w = lbctxt.measureText(text).width) > 200) ? 2 : 100 - w * 0.5;
+                lbctxt.fillText(text, start, 70 + 24 * i);
             }
         }
     }
