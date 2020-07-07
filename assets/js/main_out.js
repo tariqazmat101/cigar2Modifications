@@ -346,6 +346,19 @@
                     stats.pingLoopStamp = Date.now();
                 }, 2000);
                 break;
+            case 0x45:
+                leaderboard.items = [];
+                leaderboard.type = "ffa";
+
+                var count = reader.getUint32();
+                for (i = 0; i < count; ++i)
+                    leaderboard.items.push({
+                        me: !!reader.getUint32(),
+                        name: reader.getStringUTF8() || "An unnamed cell",
+                        color: bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8())
+                    });
+                drawLeaderboard();
+                break;
             case 0x63: // chat message
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
@@ -670,9 +683,9 @@
         lbctxt.fillRect(0, 0, 200, canvas.height);
 
         lbctxt.globalAlpha = 1;
-        lbctxt.fillStyle = "#FFF";
-        lbctxt.font = "30px Ubuntu";
-        lbctxt.fillText("Leaderboard", 100 - lbctxt.measureText("Leaderboard").width / 2, 40);
+        lbctxt.fillStyle = "yellow";
+        lbctxt.font = "35px Ubuntu";
+        lbctxt.fillText("Azma.io", 100 - lbctxt.measureText("Azma.io").width / 2, 40);
 
         if (leaderboard.type === "pie") {
             var last = 0;
@@ -698,7 +711,7 @@
                 var reg = /\{([\w]+)\}/.exec(text);
                 if (reg) text = text.replace(reg[0], "").trim();
 
-                ctx.fillStyle = isMe ? "#FAA" : "#FFF";
+                lbctxt.fillStyle = isMe ? "#FAA" : leaderboard.items[i].color;
                 if (leaderboard.type === "ffa")
                     text = (i + 1) + ". " + (text || "An unnamed cell");
                 var start = ((w = lbctxt.measureText(text).width) > 200) ? 2 : 100 - w * 0.5;
