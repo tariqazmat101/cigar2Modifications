@@ -359,6 +359,18 @@
                     });
                 drawLeaderboard();
                 break;
+            case 0x46:
+                let count = reader.getUint16();
+                for(let  i = 0; i < count; i++){
+                    minimapNodes.nodes.push({
+                        x: reader.getInt16(),
+                        y: reader.getInt16(),
+                        color: bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8()),
+                        name: reader.getStringUTF8(),
+                    })
+                }
+                let x = 4;
+                break;
             case 0x63: // chat message
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
@@ -453,6 +465,10 @@
         centerX: -1,
         centerY: -1
     });
+    var minimapNodes = Object.create({
+     nodes:[]
+        }
+    );
     var leaderboard = Object.create({
         type: NaN,
         items: null,
