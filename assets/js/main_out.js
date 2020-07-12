@@ -20,6 +20,20 @@
         var b1 = ("00" + (~~b).toString(16)).slice(-2);
         return `#${r1}${g1}${b1}`;
     }
+
+    function loadImage(url) {
+        return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
+    }
+
+    var emojis = {fire:null, snake: null};
+    async function loadEmojis(){
+           let img = await loadImage("./skins/fire.png");
+           emojis.fire = img;
+           img = await loadImage("./skins/snake.png");
+           emojis.snake = img;
+    }
+
+
     function colorToBytes(color) {
         if (color.length === 4)
             return { r: parseInt(color[1] + color[1], 16), g: parseInt(color[2] + color[2], 16), b: parseInt(color[3] + color[3], 16) };
@@ -360,16 +374,18 @@
                 drawLeaderboard();
                 break;
             case 0x46:
-                let count = reader.getUint16();
+                console.log("Minimap packet has arrived");
+                minimapNodes.nodes = [];
+                count = reader.getUint16();
                 for(let  i = 0; i < count; i++){
                     minimapNodes.nodes.push({
-                        x: reader.getInt16(),
-                        y: reader.getInt16(),
+                        x: reader.getInt32(),
+                        y: reader.getInt32(),
                         color: bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8()),
                         name: reader.getStringUTF8(),
                     })
                 }
-                let x = 4;
+                let l = 4;
                 break;
             case 0x63: // chat message
                 var flags = reader.getUint8();
@@ -681,7 +697,7 @@
         return days + "d";
     }
 
-    function drawLeaderboard() {
+    async function drawLeaderboard() {
         if (leaderboard.type === NaN) return leaderboard.visible = false;
         if (!settings.showNames || leaderboard.items.length === 0)
             return leaderboard.visible = false;
@@ -691,30 +707,33 @@
         let lbctxt = canvas.getContext("2d");
         var len = leaderboard.items.length;
 
-        canvas.width = 200;
-        canvas.height = leaderboard.type !== "pie" ? 60 + 24 * len : 240;
+        canvas.width = 180;
+        canvas.height = leaderboard.type !== "pie" ? 60 + 24 * len : 230;
 
         lbctxt.globalAlpha = .4;
         lbctxt.fillStyle = "#000";
-        lbctxt.fillRect(0, 0, 200, canvas.height);
+        lbctxt.fillRect(0, 0,canvas.width, canvas.height);
 
         lbctxt.globalAlpha = 1;
         lbctxt.fillStyle = "yellow";
         lbctxt.font = "35px Ubuntu";
-        lbctxt.fillText("Azma.io", 100 - lbctxt.measureText("Azma.io").width / 2, 40);
+        lbctxt.fillText("Azma.io", 95 - lbctxt.measureText("Azma.io").width / 2, 45);
 
         if (leaderboard.type === "pie") {
             var last = 0;
             for (var i = 0; i < len; i++) {
                 lbctxt.fillStyle = leaderboard.teams[i];
                 lbctxt.beginPath();
-                lbctxt.moveTo(100, 140);
-                lbctxt.arc(100, 140, 80, last, (last += leaderboard.items[i] * PI_2), false);
+                lbctxt.moveTo(100 - 7, 140);
+                lbctxt.arc(100 - 7, 140, 80, last, (last += leaderboard.items[i] * PI_2), false);
                 lbctxt.closePath();
                 lbctxt.fill();
             }
         } else {
             var text, isMe = false, w, start;
+
+            //How far away the the text is relative to the left side, bigger numbers, larger offset
+            textOffset = 30;
             lbctxt.font = "20px Ubuntu";
             for (var i = 0; i < len; i++) {
                 if (leaderboard.type === "text")
@@ -727,11 +746,15 @@
                 var reg = /\{([\w]+)\}/.exec(text);
                 if (reg) text = text.replace(reg[0], "").trim();
 
-                lbctxt.fillStyle = isMe ? "#FAA" : leaderboard.items[i].color;
-                if (leaderboard.type === "ffa")
-                    text = (i + 1) + ". " + (text || "An unnamed cell");
-                var start = ((w = lbctxt.measureText(text).width) > 200) ? 2 : 100 - w * 0.5;
-                lbctxt.fillText(text, start, 70 + 24 * i);
+                //lbctxt.fillStyle = isMe ? "#FAA" : leaderboard.items[i].color;
+                lbctxt.fillStyle = isMe ? "yellow" : leaderboard.items[i].color;
+                text = (i + 1) + ". " + (text || "An unnamed cell");
+                while(lbctxt.measureText(text).width  > canvas.width - textOffset  )  { text = text.substring(0, text.length  -1);}
+                if( i == 0) lbctxt.drawImage(emojis.snake,5,52 + 24 * 8 ,20,20);
+                if( i == 1) lbctxt.drawImage(emojis.fire,5,52  ,20,20);
+                //what is the step value for the fire emoji?
+
+                lbctxt.fillText(text,textOffset, 70 + 24 * i);
             }
         }
     }
@@ -797,13 +820,18 @@
 
         var myPosX = beginX + ((cameraX + border.width / 2) / border.width * width);
         var myPosY = beginY + ((cameraY + border.height / 2) / border.height * height);
-        mainCtx.fillStyle = "#FAA";
-        mainCtx.beginPath();
-        mainCtx.arc(myPosX, myPosY, 5, 0, PI_2, false);
-        mainCtx.closePath();
-        mainCtx.fill();
+        for(let i = 0; i < minimapNodes.nodes.length; i++){
+            let node = minimapNodes.nodes[i];
+            let nodeX = beginX + (node.x + border.width / 2) / border.width * width;
+            let nodeY =  beginY + ( node.y + border.height / 2) / border.height * height;
+            mainCtx.fillStyle = node.color;
+            mainCtx.beginPath();
 
-        // draw name above user's pos if he has a cell on the screen 
+            mainCtx.arc(nodeX,nodeY , 4, 0, PI_2, false);
+            mainCtx.closePath();
+            mainCtx.fill();
+        }
+        // draw name above user's pos if he has a cell on the screen
         var cell = null;
         for (var i = 0, l = cells.mine.length; i < l; i++)
             if (cells.byId.hasOwnProperty(cells.mine[i])) {
@@ -992,6 +1020,7 @@
         },
         drawShape: function(ctx) {
             ctx.fillStyle = settings.showColor ? this.color : Cell.prototype.color;
+            /* Do not add stroke to pellets, they will performace */
             ctx.strokeStyle = settings.showColor ? this.sColor : Cell.prototype.sColor;
             ctx.lineWidth = Math.max(~~(this.s / 50), 10);
             if (!this.ejected && 20 < this.s)
@@ -1017,9 +1046,9 @@
             if (this.destroyed)
                 ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
-            
-            if (!this.ejected && 20 < this.s)
-                ctx.stroke();
+
+            if(this.size > 30) ctx.stroke();
+            //IF this.skin, then darken the stroke style to ensure that we can see what color
             ctx.fill();
             if (settings.showSkins && this.skin) {
                 var skin = loadedSkins[this.skin];
@@ -1052,6 +1081,7 @@
                 drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
         }
     };
+
 
     function cacheCleanup() {
         for (var i in cachedNames) {
@@ -1193,6 +1223,7 @@
         mainCtx = mainCanvas.getContext("2d");
         chatBox = document.getElementById("chat_textbox");
         mainCanvas.focus();
+        loadEmojis();
         function handleScroll(event) {
             mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
             1 > mouseZ && (mouseZ = 1);
