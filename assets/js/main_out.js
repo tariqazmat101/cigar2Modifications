@@ -25,12 +25,14 @@
         return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
     }
 
-    var emojis = {fire:null, snake: null};
-    async function loadEmojis(){
-           let img = await loadImage("./skins/fire.png");
-           emojis.fire = img;
-           img = await loadImage("./skins/snake.png");
-           emojis.snake = img;
+    var images = {fire:null, snake: null};
+    async function loadEmojis() {
+        let img = await loadImage("./skins/fire.png");
+        images.fire = img;
+        img = await loadImage("./skins/snake.png");
+        images.snake = img;
+        img = await loadImage("./skins/minimap.png");
+        images.map = img;
     }
 
 
@@ -697,7 +699,7 @@
         return days + "d";
     }
 
-    async function drawLeaderboard() {
+     function drawLeaderboard() {
         if (leaderboard.type === NaN) return leaderboard.visible = false;
         if (!settings.showNames || leaderboard.items.length === 0)
             return leaderboard.visible = false;
@@ -750,8 +752,8 @@
                 lbctxt.fillStyle = isMe ? "yellow" : leaderboard.items[i].color;
                 text = (i + 1) + ". " + (text || "An unnamed cell");
                 while(lbctxt.measureText(text).width  > canvas.width - textOffset  )  { text = text.substring(0, text.length  -1);}
-                if( i == 0) lbctxt.drawImage(emojis.snake,5,52 + 24 * 8 ,20,20);
-                if( i == 1) lbctxt.drawImage(emojis.fire,5,52  ,20,20);
+                if( i == 0) lbctxt.drawImage(images.snake,5,52 + 24 * 8 ,20,20);
+                if( i == 1) lbctxt.drawImage(images.fire,5,52  ,20,20);
                 //what is the step value for the fire emoji?
 
                 lbctxt.fillText(text,textOffset, 70 + 24 * i);
@@ -788,35 +790,25 @@
             // and is detectable with a non-zero map center
             return;
         mainCtx.save();
+        let offset = 10;
         var targetSize = 200;
         var width = targetSize * (border.width / border.height);
         var height = targetSize * (border.height / border.width);
-        var beginX = mainCanvas.width / viewMult - width;
-        var beginY = mainCanvas.height / viewMult - height;
+        var beginX = mainCanvas.width / viewMult - width - offset ;
+        var beginY = mainCanvas.height / viewMult - height - offset ;
 
         mainCtx.fillStyle = "#000";
-        mainCtx.globalAlpha = 0.4;
+        mainCtx.globalAlpha = 0.9;
         mainCtx.fillRect(beginX, beginY, width, height);
         mainCtx.globalAlpha = 1;
+        //Offset relative to right side of window, how much spacing is between right side of map and right side of window.
+        mainCtx.drawImage(images.map, beginX,beginY, width, height);
 
-        var sectorCount = 5;
-        var sectorNames = ["ABCDE", "12345"];
-        var sectorWidth = width / sectorCount;
-        var sectorHeight = height / sectorCount;
-        var sectorNameSize = Math.min(sectorWidth, sectorHeight) / 3;
-
-        mainCtx.fillStyle = settings.darkTheme ? "#666" : "#DDD";
+        mainCtx.fillStyle = settings.darkTheme ? "#666" : "#666";
         mainCtx.textBaseline = "middle";
         mainCtx.textAlign = "center";
-        mainCtx.font = `${sectorNameSize}px Ubuntu`;
 
-        for (var i = 0; i < sectorCount; i++) {
-            var x = sectorWidth / 2 + i * sectorWidth;
-            for (var j = 0; j < sectorCount; j++) {
-                var y = sectorHeight / 2 + j * sectorHeight;
-                mainCtx.fillText(`${sectorNames[0][i]}${sectorNames[1][j]}`, beginX + x, beginY + y);
-            }
-        }
+
 
         var myPosX = beginX + ((cameraX + border.width / 2) / border.width * width);
         var myPosY = beginY + ((cameraY + border.height / 2) / border.height * height);
@@ -840,7 +832,7 @@
             }
         if (cell !== null) {
             mainCtx.fillStyle = settings.darkTheme ? "#DDD" : "#222";
-            var textSize = sectorNameSize;
+            var textSize = 12;
             mainCtx.font = `${textSize}px Ubuntu`;
             mainCtx.fillText(cell.name, myPosX, myPosY - 7 - textSize / 2);
         }
@@ -1047,7 +1039,7 @@
                 ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
 
-            if(this.size > 30) ctx.stroke();
+            if(!(this.ejected) && 20 < this.size) ctx.stroke();
             //IF this.skin, then darken the stroke style to ensure that we can see what color
             ctx.fill();
             if (settings.showSkins && this.skin) {
