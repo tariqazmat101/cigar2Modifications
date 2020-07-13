@@ -620,8 +620,9 @@
     }
     
     function drawChat() {
-        if (chat.messages.length === 0 && settings.showChat)
+        if (chat.messages.length === 0 || !settings.showChat)
             return chat.visible = false;
+
         chat.visible = true;
         var canvas = chat.canvas;
         var ctx = canvas.getContext("2d");
@@ -634,13 +635,13 @@
                     color: latestMessages[i].color
                 }, {
                     text: " " + latestMessages[i].message,
-                    color: settings.darkTheme ? "#FFF" : "#000"
+                    color: settings.darkTheme ? "#DDD" : "#222"
                 }
             ]);
         var width = 0;
-        var height = 20 * len + 2;
+        var height = 22 * len + 4;
         for (var i = 0; i < len; i++) {
-            var thisLineWidth = 0;
+            var thisLineWidth = 10;
             var complexes = lines[i];
             for (var j = 0; j < complexes.length; j++) {
                 ctx.font = "18px Ubuntu";
