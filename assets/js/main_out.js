@@ -1345,7 +1345,7 @@
         }
 
         window.requestAnimationFrame(drawGame);
-        wsInit("ec2-52-91-146-176.compute-1.amazonaws.com:443");
+        wsInit("backend.azma.io");
 
     }
     wHandle.setserver = function(arg) {
