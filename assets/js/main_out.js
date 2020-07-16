@@ -25,14 +25,18 @@
         return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
     }
 
-    var images = {fire:null, snake: null};
-    async function loadEmojis() {
-        let img = await loadImage("./skins/fire.png");
-        images.fire = img;
-        img = await loadImage("./skins/snake.png");
-        images.snake = img;
-        img = await loadImage("./skins/minimap.png");
-        images.map = img;
+    var images = {fire:null, snake: null,minimap:null};
+    filenames = ["fire","snake","minimap"];
+
+    function syncLoadImages() {
+        for( let i = 0,file,img; i <filenames.length; i++ ){
+             file = filenames[i];
+             img = new Image();
+            img.src = `./skins/${file}.png`;
+            img.onload = () => {
+                images[file] = img
+            }
+        }
     }
 
 
@@ -803,7 +807,7 @@
         mainCtx.fillRect(beginX, beginY, width, height);
         mainCtx.globalAlpha = 1;
         //Offset relative to right side of window, how much spacing is between right side of map and right side of window.
-        mainCtx.drawImage(images.map, beginX,beginY, width, height);
+        mainCtx.drawImage(images.minimap, beginX,beginY, width, height);
 
         mainCtx.fillStyle = settings.darkTheme ? "#666" : "#666";
         mainCtx.textBaseline = "middle";
@@ -1216,7 +1220,9 @@
         mainCtx = mainCanvas.getContext("2d");
         chatBox = document.getElementById("chat_textbox");
         mainCanvas.focus();
-        loadEmojis();
+
+        //load critical images
+        syncLoadImages();
         function handleScroll(event) {
             mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
             1 > mouseZ && (mouseZ = 1);
