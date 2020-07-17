@@ -20,7 +20,7 @@
 
     <script src="https://kit.fontawesome.com/2dda43642d.js" crossorigin="anonymous"></script>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="assets/js/main_out.js" defer></script>
+    <script type='module' src="assets/js/main_out.js" defer></script>
 </head>
 
 <body>
@@ -47,14 +47,13 @@
         <div id="helloDialog">
             <form role="form">
                 <div class="form-group">
-                    <h2 id="title">Press Play to join! :DDD</h2>
+                    <h2 id="title">SHHHH Don't tell anyone about this game!</h2>
                 </div>
                 <div class="form-group">
                     <input id="nick" class="form-control save" data-box-id="0" placeholder="Nick" maxlength="15" />
                     <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
                         <option selected disabled>Servers:</option>
-                        <option value="ec2-52-91-146-176.compute-1.amazonaws.com:443">AWS</option>
-                        <option value="ec2-52-91-146-176.compute-1.amazonaws.com:80">HTTP</option>
+                        <option value="backend.azma.io">AWS</option>
                         <option value="127.0.0.1:443">Local</option>
                     </select>
                     <br clear="both" />

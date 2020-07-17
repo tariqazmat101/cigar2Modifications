@@ -1,3 +1,5 @@
+import Reader from "./reader.js"
+import Writer from "./writer.js"
 (function(wHandle, wjQuery) {
     if (navigator.appVersion.indexOf("MSIE") != -1)
 	   alert("You're using a pretty old browser, some parts of the website might not work properly.");
@@ -24,9 +26,8 @@
     function loadImage(url) {
         return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
     }
-
     var images = {fire:null, snake: null,minimap:null};
-    filenames = ["fire","snake","minimap"];
+    let filenames = ["fire","snake","minimap"];
 
     function syncLoadImages() {
         for( let i = 0,file,img; i <filenames.length; i++ ){
@@ -38,8 +39,6 @@
             }
         }
     }
-
-
     function colorToBytes(color) {
         if (color.length === 4)
             return { r: parseInt(color[1] + color[1], 16), g: parseInt(color[2] + color[2], 16), b: parseInt(color[3] + color[3], 16) };
@@ -55,110 +54,8 @@
         for (var i in object)
             delete object[i];
     }
-    var __buf = new DataView(new ArrayBuffer(8));
-    function Writer(littleEndian) {
-        this._e = littleEndian;
-        this.reset();
-        return this;
-    }
-    Writer.prototype = {
-        writer: true,
-        reset: function(littleEndian) {
-            this._b = [];
-            this._o = 0;
-        },
-        setUint8: function(a) {
-            if (a >= 0 && a < 256) this._b.push(a);
-            return this;
-        },
-        setInt8: function(a) {
-            if (a >= -128 && a < 128) this._b.push(a);
-            return this;
-        },
-        setUint16: function(a) {
-            __buf.setUint16(0, a, this._e);
-            this._move(2);
-            return this;
-        },
-        setInt16: function(a) {
-            __buf.setInt16(0, a, this._e);
-            this._move(2);
-            return this;
-        },
-        setUint32: function(a) {
-            __buf.setUint32(0, a, this._e);
-            this._move(4);
-            return this;
-        },
-        setInt32: function(a) {
-            __buf.setInt32(0, a, this._e);
-            this._move(4);
-            return this;
-        },
-        setFloat32: function(a) {
-            __buf.setFloat32(0, a, this._e);
-            this._move(4);
-            return this;
-        },
-        setFloat64: function(a) {
-            __buf.setFloat64(0, a, this._e);
-            this._move(8);
-            return this;
-        },
-        _move: function(b) {
-            for (var i = 0; i < b; i++) this._b.push(__buf.getUint8(i));
-        },
-        setStringUTF8: function(s) {
-            var bytesStr = unescape(encodeURIComponent(s));
-            for (var i = 0, l = bytesStr.length; i < l; i++) this._b.push(bytesStr.charCodeAt(i));
-            this._b.push(0);
-            return this;
-        },
-        build: function() {
-            return new Uint8Array(this._b);
-        }
-    };
-    function Reader(view, offset, littleEndian) {
-        this._e = littleEndian;
-        if (view) this.repurpose(view, offset);
-    }
-    Reader.prototype = {
-        reader: true,
-        repurpose: function(view, offset) {
-            this.view = view;
-            this._o = offset || 0;
-        },
-        getUint8: function() {
-            return this.view.getUint8(this._o++, this._e);
-        },
-        getInt8: function() {
-            return this.view.getInt8(this._o++, this._e);
-        },
-        getUint16: function() {
-            return this.view.getUint16((this._o += 2) - 2, this._e);
-        },
-        getInt16: function() {
-            return this.view.getInt16((this._o += 2) - 2, this._e);
-        },
-        getUint32: function() {
-            return this.view.getUint32((this._o += 4) - 4, this._e);
-        },
-        getInt32: function() {
-            return this.view.getInt32((this._o += 4) - 4, this._e);
-        },
-        getFloat32: function() {
-            return this.view.getFloat32((this._o += 4) - 4, this._e);
-        },
-        getFloat64: function() {
-            return this.view.getFloat64((this._o += 8) - 8, this._e);
-        },
-        getStringUTF8: function() {
-            var s = "", b;
-            while ((b = this.view.getUint8(this._o++)) !== 0) s += String.fromCharCode(b);
 
-            return decodeURIComponent(escape(s));
-        }
-    };
+
     var log = {
         verbosity: 4,
         error: function(a) { if (log.verbosity <= 0) return; console.error(a); },
@@ -586,20 +483,6 @@
             });
         });
     }
-    wjQuery.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "checkdir.php",
-        data: { "action": "getSkins" },
-        success: function(data) {
-            var stamp = Date.now();
-            response = JSON.parse(data.names);
-            for (var i = 0; i < response.length; i++)
-                knownSkins[response[i]] = stamp;
-            for (var i in knownSkins)
-                if (knownSkins[i] !== stamp) delete knownSkins[i];
-        }
-    });
 
     function hideESCOverlay() {
         escOverlayShown = false;
@@ -740,7 +623,7 @@
             var text, isMe = false, w, start;
 
             //How far away the the text is relative to the left side, bigger numbers, larger offset
-            textOffset = 30;
+            let textOffset = 30;
             lbctxt.font = "20px Ubuntu";
             for (var i = 0; i < len; i++) {
                 if (leaderboard.type === "text")
@@ -769,26 +652,30 @@
         mainCtx.save();
         mainCtx.lineWidth = 1;
         mainCtx.strokeStyle = settings.darkTheme ? "#AAA" : "#000";
-        mainCtx.globalAlpha = 0.2;
-        var step = 50, i;
-            cW = mainCanvas.width / cameraZ, cH = mainCanvas.height / cameraZ,
-            startLeft = (-cameraX + cW / 2) % step,
-            startTop = (-cameraY + cH / 2) % step;
+        mainCtx.globalAlpha = 0.1;
+        var step = 50;
+        let  cW = mainCanvas.width;
+        let cH = mainCanvas.height;
+        let startLeft = (-cameraX + cW / cameraZ / 2) % step,
+            startTop = (-cameraY + cH / cameraZ / 2) % step;
+        startLeft = startLeft * cameraZ;
+        startTop = startTop * cameraZ;
+        step = step * cameraZ;
 
-        scaleForth(mainCtx);
         mainCtx.beginPath();
-        for (i = startLeft; i < cW; i += step) {
-            mainCtx.moveTo(i, 0);
-            mainCtx.lineTo(i, cH);
+        for (var i = startLeft; i < cW; i += step) {
+            mainCtx.moveTo(~~i, 0);
+            mainCtx.lineTo(~~i, ~~cH);
         }
-        for (i = startTop; i < cH; i += step) {
-            mainCtx.moveTo(0, i);
-            mainCtx.lineTo(cW, i);
+        for (var i = startTop; i < cH; i += step) {
+            mainCtx.moveTo(0, ~~i);
+            mainCtx.lineTo(~~cW, ~~i);
         }
         mainCtx.closePath();
         mainCtx.stroke();
         mainCtx.restore();
     }
+
     function drawMinimap() {
         if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap)
             // scramble level 2+ makes the minimap unusable
@@ -1351,7 +1238,6 @@
         }
 
         window.requestAnimationFrame(drawGame);
-        wsInit("backend.azma.io");
 
     }
     wHandle.setserver = function(arg) {
@@ -1396,13 +1282,6 @@
     wHandle.play = function(a) {
         sendPlay(a);
         hideESCOverlay();
-    };
-    wHandle.openSkinsList = function() {
-        if (wjQuery("#inPageModalTitle").text() === "Skins") return;
-        wjQuery.get("include/gallery.php").then(function(data) {
-            wjQuery("#inPageModalTitle").text("Skins");
-            wjQuery("#inPageModalBody").html(data);
-        });
     };
     wHandle.onload = init;
 })(window, window.jQuery);
