@@ -1240,7 +1240,7 @@ import Writer from "./writer.js"
         window.requestAnimationFrame(drawGame);
 
     }
-    wHandle.setserver = function(arg) {
+    wHandle.setserver = function(arg = 'backend.azma.io') {
         if (wsUrl === arg) return;
         wsInit(arg);
     };
