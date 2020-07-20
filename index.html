@@ -46,10 +46,11 @@
     <div id="overlays">
         <div id="helloDialog">
             <form role="form">
-                <div class="form-group">
-                    <h2 id="title">SHHHH Don't tell anyone about this game!</h2>
-                </div>
-                <div class="form-group">
+                    <img id="banner" src="skins/banner.png" alt="Banner Image"/>
+                    <p  style="text-align: center; font-style: italic;">Made for the community <3 - Tariq</p>
+
+
+                        <div class="form-group">
                     <input id="nick" class="form-control save" data-box-id="0" placeholder="Nick" maxlength="15" />
                     <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
                         <option selected disabled>Servers:</option>
@@ -59,9 +60,6 @@
                     <br clear="both" />
                 </div>
                 <div class="form-group">
-                    <div class="mb-10">
-                        <a data-toggle="modal" data-target="#inPageModal" onclick="openSkinsList();" class="btn-primary btn btn-info" role="button" style="width: 100%;">Skins Gallery</a>
-                    </div>
 
                     <button type="button" id="play-btn" onclick="play(document.getElementById('nick').value); return false;" class="btn btn-play btn-primary btn-needs-server">Play</button>
                     <button onclick="$('#settings, #instructions').toggle(); return false;" class="btn btn-info btn-settings" id="settings-btn"><i class="glyphicon glyphicon-cog"></i></button>
@@ -97,16 +95,29 @@
                 <hr/>
                 <center>
                     <span class="text-muted">
-                        Move your mouse to control your cell<br/>
-                        Press <b>Space</b> to split<br/>
-                        Press <b>W</b> to eject some mass<br/>
+                        Like what I'm doing? Buy me a coffee!
                     </span>
                 </center>
             </div>
 
+
+
+
+                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+                    <input type="hidden" name="cmd" value="_donations" />
+                    <input type="hidden" name="business" value="G95W3KHDHGMWA" />
+                    <input type="hidden" name="item_name" value="Like the server? Donate to to show some support :) " />
+                    <input type="hidden" name="currency_code" value="EUR" />
+                    <input id="paypal" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<!--                    <img alt="" border="0" src="https://www.paypal.com/en_CA/i/scr/pixel.gif" width="1" height="1" />-->
+                </form>
+
+
+
             <hr />
             <div id="footer">
-                <a href="https://github.com/Luka967/Cigar" class="text-muted">Luka967/Cigar</a>
+                <a title="Whitedeath Server link" href="http://ogar-teams.fun/1vs1/" class="text-muted">WhiteDeath's server! </a><br>
+                <a title="Ogar Devs discord link" href="https://discord.gg/XcKgShT" class="text-muted">Ogar Devs</a><br/>
             </div>
 
         </div>
