@@ -1,6 +1,11 @@
 import Reader from "./reader.js"
 import Writer from "./writer.js"
+
+
 (function(wHandle, wjQuery) {
+    function byId(id) {return document.getElementById(id);}
+    function byClass(clss, parent) {return (parent || document).getElementsByClassName(clss);}
+    console.log(wjQuery);
     if (navigator.appVersion.indexOf("MSIE") != -1)
 	   alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
