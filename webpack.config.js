@@ -8,7 +8,7 @@ module.exports = {
     output: {
         filename: '[name].bundle.[contenthash].js',
         path: path.resolve(__dirname, 'dist'),
-        publicPath: "./dist/"
+        publicPath: "/assets/"
     },
     module: {
         rules: [
