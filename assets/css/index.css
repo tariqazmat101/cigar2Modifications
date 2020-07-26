@@ -24,6 +24,13 @@ body {
     padding: 10px;
 }
 
+#legal {
+    position: absolute;
+    right: 45%;
+    bottom: 5px;
+    size: 12px;
+}
+
 #banner{
     display: block;
     margin-left: auto;
@@ -154,6 +161,7 @@ body {
     border-radius: 5px;
     padding: 5px;
     border: 0px solid transparent;
+    display: none;
 
 }
 .mb-10 {
@@ -172,6 +180,9 @@ body {
 .center {
     display: table;
     margin: 0 auto;
+}
+.textlegal{
+    color: #aac7e4;
 }
 
 @keyframes spin {

@@ -53,6 +53,15 @@ import fire from "../img/snake.png"
          myimage.src = map;
          images["minimap"] = myimage;
 
+         const thatimage = new Image();
+         thatimage.src = fire;
+         images["fire"] = thatimage
+
+         const x = new Image();
+         x.src = snake;
+         images["snake"] = x;
+
+
 
      }
 
@@ -126,6 +135,7 @@ import fire from "../img/snake.png"
         wjQuery("#connecting").hide();
         wsSend(SEND_254);
         wsSend(SEND_255);
+        document.getElementById("togglelb").style.display="block";
         log.debug(`ws connected, using https: ${USE_HTTPS}`);
     }
     function wsError(error) {
