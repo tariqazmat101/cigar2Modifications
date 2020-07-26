@@ -24,17 +24,26 @@ module.exports = {
 
             {
                 test: /\.(png|jpg|gif)$/,
-                use: [
-                    {
-                        loader: 'file-loader'
-                    },
-                ],
+                use: {
+                    loader: 'file-loader',
+                    options: {
+                        outputPath: 'img/',
+                        publicPath: ' img/'
+                    }
+                },
             },
             {
                 test: /\.css$/,
                 use: [
                     'style-loader',
                     'css-loader',
+                ]
+            },
+
+            {
+                test: /\.html$/,
+                use: [
+                    'html-loader',
                 ]
             }
         ]
@@ -45,7 +54,8 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: "./index.html",
+            // template: "./index.html",
+            template: 'assets/index.html',
             minify: false,
         }),
         new CleanWebpackPlugin(),

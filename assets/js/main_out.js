@@ -1,6 +1,10 @@
-import $ from 'jquery';
+// import $ from 'jquery';
+import css from "../css/index.css"
 import Reader from "./reader.js"
 import Writer from "./writer.js"
+import map from "../img/minimap.png"
+import snake from "../img/fire.png"
+import fire from "../img/snake.png"
 
 
 (function(wHandle, wjQuery) {
@@ -32,19 +36,26 @@ import Writer from "./writer.js"
     function loadImage(url) {
         return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
     }
-    var images = {fire:null, snake: null,minimap:null};
-    let filenames = ["fire","snake","minimap"];
+    var images = {fire:null, snake: null,minimap:null,fireimage:null};
 
-    function syncLoadImages() {
-        for( let i = 0,file,img; i <filenames.length; i++ ){
-             file = filenames[i];
-             img = new Image();
-            img.src = `./skins/${file}.png`;
-            img.onload = () => {
-                images[file] = img
-            }
-        }
-    }
+    // function syncLoadImages() {
+    //     for( let i = 0,file,img; i <filenames.length; i++ ){
+    //          file = filenames[i];
+    //          img = new Image();
+    //         img.src = `./img/${file}.png`;
+    //         img.onload = () => {
+    //             images[file] = img
+    //         }
+    //     }
+    // }
+     function syncLoadImages(){
+         const myimage = new Image();
+         myimage.src = map;
+         images["minimap"] = myimage;
+
+
+     }
+
     function colorToBytes(color) {
         if (color.length === 4)
             return { r: parseInt(color[1] + color[1], 16), g: parseInt(color[2] + color[2], 16), b: parseInt(color[3] + color[3], 16) };
