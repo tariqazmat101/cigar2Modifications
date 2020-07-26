@@ -1,6 +1,7 @@
 const {CleanWebpackPlugin}= require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     entry: './assets/js/main_out.js',
@@ -29,17 +30,28 @@ module.exports = {
                     },
                 ],
             },
+            {
+                test: /\.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                ]
+            }
         ]
     },
     devServer: {
-        contentBase: './dist',
+        contentBase: path.join(__dirname,"dist"),
         open: true
     },
-
     plugins: [
         new HtmlWebpackPlugin({
-            title: "Plug In master",
+            template: "./index.html",
+            minify: false,
         }),
         new CleanWebpackPlugin(),
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery"
+        }),
     ],
 };

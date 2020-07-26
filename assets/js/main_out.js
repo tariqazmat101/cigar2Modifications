@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import Reader from "./reader.js"
 import Writer from "./writer.js"
 
@@ -471,7 +472,7 @@ import Writer from "./writer.js"
     };
 
     if (null !== wHandle.localStorage) {
-        wjQuery(window).load(function() {
+        wjQuery(window).on('load',function() {
             wjQuery(".save").each(function() {
                 var id = wjQuery(this).data("box-id");
                 var value = wHandle.localStorage.getItem("checkbox-" + id);
@@ -1289,4 +1290,4 @@ import Writer from "./writer.js"
         hideESCOverlay();
     };
     wHandle.onload = init;
-})(window, window.jQuery);
+})(window, $);
