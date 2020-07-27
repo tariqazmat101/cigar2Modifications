@@ -10,6 +10,6 @@
 
   artifacts:
     files:
-      - 'dist/*'
-    discard-paths: yes
+      - './dist/*'
+    discard-paths: no
 #    base-directory: dist
