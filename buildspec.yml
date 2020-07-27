@@ -3,13 +3,11 @@
   phases:
     pre_build:
       commands:
-        echo $CODEBUILD_SRC_DIR
     build:
       commands:
-        echo $CODEBUILD_SRC_DIR
 
   artifacts:
     files:
-      - 'dist/*'
+      - buildspec.yml
     discard-paths: no
 #    base-directory: dist
