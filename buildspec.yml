@@ -8,6 +8,6 @@
 
   artifacts:
     files:
-      - buildspec.yml
+      - dist/*
     discard-paths: no
 #    base-directory: dist
