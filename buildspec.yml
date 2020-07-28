@@ -5,9 +5,11 @@
       commands:
     build:
       commands:
+        - echo `$BUILD_COMMAND`
+
 
   artifacts:
     files:
-      -**/*
+      - "**/*"
     discard-paths: no
     base-directory: dist
