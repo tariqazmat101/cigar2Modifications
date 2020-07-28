@@ -8,6 +8,6 @@
 
   artifacts:
     files:
-      - dist/*
+      - dist/*/**
     discard-paths: no
 #    base-directory: dist
