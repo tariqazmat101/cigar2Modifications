@@ -4,11 +4,15 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
+    devtool: "source-map",
     entry: './assets/js/main_out.js',
     output: {
         filename: '[name].bundle.[contenthash].js',
         path: path.resolve(__dirname, 'dist'),
         //publicPath: "/dist/"
+    },
+    optimization: {
+        minimize: false
     },
     module: {
         rules: [
@@ -18,7 +22,15 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env']
+                        presets: ['@babel/preset-env',
+                            {
+                                "plugins":[
+                                "@babel/plugin-proposal-class-properties"
+                                    ]
+
+                            }
+
+                            ]
                     }
                 }
             },

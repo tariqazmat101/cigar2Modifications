@@ -1,13 +1,25 @@
 // import $ from 'jquery';
-import css from "../css/index.css"
 import Reader from "./reader.js"
 import Writer from "./writer.js"
 import map from "../img/minimap.png"
 import snake from "../img/fire.png"
 import fire from "../img/snake.png"
+import Cell from "./Cell"
+
+import pubsub from 'pubsub-js';
+import css  from "../css/index.css"
+import {topics} from "./utils";
 
 
 (function(wHandle, wjQuery) {
+    var mySubscriber = function (msg, data) {
+        console.log(`${msg} is gay and ${data}`);
+    };
+
+    //why don't we add (); to mySubscriber function call? we are invoking it,right??
+    var token = pubsub.subscribe('x', mySubscriber);
+    pubsub.publish('x', 'hello world!');
+
     function byId(id) {return document.getElementById(id);}
     function byClass(clss, parent) {return (parent || document).getElementsByClassName(clss);}
     console.log(wjQuery);
@@ -60,9 +72,6 @@ import fire from "../img/snake.png"
          const x = new Image();
          x.src = snake;
          images["snake"] = x;
-
-
-
      }
 
     function colorToBytes(color) {
@@ -172,7 +181,7 @@ import fire from "../img/snake.png"
                     killed = reader.getUint32();
                     if (!cells.byId.hasOwnProperty(killer) || !cells.byId.hasOwnProperty(killed))
                         continue;
-                    cells.byId[killed].destroy(killer);
+                    cells.byId[killed].destroy(killer,syncUpdStamp,cells);
                 }
 
                 // update records
@@ -194,7 +203,7 @@ import fire from "../img/snake.png"
 
                     if (cells.byId.hasOwnProperty(id)) {
                         cell = cells.byId[id];
-                        cell.update(syncUpdStamp);
+                        cell.update(syncUpdStamp,cells);
                         cell.updated = syncUpdStamp;
                         cell.ox = cell.x;
                         cell.oy = cell.y;
@@ -206,7 +215,7 @@ import fire from "../img/snake.png"
                         if (skin) cell.setSkin(skin);
                         if (name) cell.setName(name);
                     } else {
-                        cell = new Cell(id, x, y, s, name, color, skin, flags);
+                        cell = new Cell(id, x, y, s, name, color, skin, flags,syncUpdStamp);
                         cells.byId[id] = cell;
                         cells.list.push(cell);
                     }
@@ -216,7 +225,9 @@ import fire from "../img/snake.png"
                 for (i = 0; i < count; i++) {
                     killed = reader.getUint32();
                     if (cells.byId.hasOwnProperty(killed) && !cells.byId[killed].destroyed)
-                        cells.byId[killed].destroy(null);
+                        cells.byId[killed].destroy(null,syncUpdStamp,cells);
+                    //moved this functionality over
+                        delete cells.byId[this.id];
                 }
                 break;
             case 0x11: // update pos
@@ -225,8 +236,12 @@ import fire from "../img/snake.png"
                 targetZ = reader.getFloat32();
                 break;
             case 0x12: // clear all
-                for (var i in cells.byId)
-                    cells.byId[i].destroy(null);
+                for (var i in cells.byId){
+                    cells.byId[i].destroy(null,syncUpdStamp,cells);   // what the fuck is this
+                    delete cells.byId[this.id];
+                }
+
+
             case 0x14: // clear my cells
                 cells.mine = [];
                 break;
@@ -320,7 +335,7 @@ import fire from "../img/snake.png"
             case 0x63: // chat message
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
-                
+
                 var name = reader.getStringUTF8().trim();
                 var reg = /\{([\w]+)\}/.exec(name);
                 if (reg) name = name.replace(reg[0], "").trim();
@@ -517,8 +532,9 @@ import fire from "../img/snake.png"
     }
     function showESCOverlay() {
         escOverlayShown = true;
-        wjQuery("#overlays").fadeIn(300);
+        wjQuery("#overlays").fadeIn(0);
     }
+    pubsub.subscribe(topics.showEscapeoverlay,showESCOverlay);
 
     function toCamera(ctx) {
         ctx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
@@ -532,7 +548,7 @@ import fire from "../img/snake.png"
         scaleBack(ctx);
         ctx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
     }
-    
+
     function drawChat() {
         if (chat.messages.length === 0 || !settings.showChat)
             return chat.visible = false;
@@ -765,7 +781,7 @@ import fire from "../img/snake.png"
 
         var drawList = cells.list.slice(0).sort(cellSort);
         for (var i = 0, l = drawList.length; i < l; i++)
-            drawList[i].update(syncAppStamp);
+            drawList[i].update(syncAppStamp,cells);
         cameraUpdate();
 
         mainCtx.save();
@@ -777,7 +793,7 @@ import fire from "../img/snake.png"
         toCamera(mainCtx);
 
         for (var i = 0, l = drawList.length; i < l; i++)
-            drawList[i].draw(mainCtx);
+            drawList[i].draw(mainCtx,cells);
 
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
@@ -857,141 +873,6 @@ import fire from "../img/snake.png"
         cameraZ += (targetZ * viewMult * mouseZ - cameraZ) / 9;
         cameraZInvd = 1 / cameraZ;
     }
-
-    function Cell(id, x, y, s, name, color, skin, flags) {
-        this.id = id;
-        this.x = this.nx = this.ox = x;
-        this.y = this.ny = this.oy = y;
-        this.s = this.ns = this.os = s;
-        this.setColor(color);
-        this.setName(name);
-        this.setSkin(skin);
-        this.jagged = flags & 0x01 || flags & 0x10;
-        this.ejected = !!(flags & 0x20);
-        this.born = syncUpdStamp;
-    }
-    Cell.prototype = {
-        destroyed: false,
-        id: 0, diedBy: 0,
-        ox: 0, x: 0, nx: 0,
-        oy: 0, y: 0, ny: 0,
-        os: 0, s: 0, ns: 0,
-        nameSize: 0, drawNameSize: 0,
-        color: "#FFF", sColor: "#E5E5E5",
-        skin: null, jagged: false,
-        born: null, updated: null, dead: null, // timestamps
-        destroy: function(killerId) {
-            delete cells.byId[this.id];
-            if (cells.mine.remove(this.id) && cells.mine.length === 0)
-                showESCOverlay();
-            this.destroyed = true;
-            this.dead = syncUpdStamp;
-            if (killerId && !this.diedBy)
-                this.diedBy = killerId;
-        },
-        update: function(relativeTime) {
-            var dt = (relativeTime - this.updated) / 120;
-            dt = Math.max(Math.min(dt, 1), 0);
-            if (this.destroyed && Date.now() > this.dead + 200)
-                cells.list.remove(this);
-            else if (this.diedBy && cells.byId.hasOwnProperty(this.diedBy)) {
-                this.nx = cells.byId[this.diedBy].x;
-                this.ny = cells.byId[this.diedBy].y;
-            }
-            this.x = this.ox + (this.nx - this.ox) * dt;
-            this.y = this.oy + (this.ny - this.oy) * dt;
-            this.s = this.os + (this.ns - this.os) * dt;
-            this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
-            this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
-        },
-        setName: function(value) {
-            var nameSkin = /\{([\w\W]+)\}/.exec(value);
-            if (this.skin === null && nameSkin !== null) {
-                this.name = value.replace(nameSkin[0], "").trim();
-                this.setSkin(nameSkin[1]);
-            } else this.name = value;
-        },
-        setSkin: function(value) {
-            this.skin = (value && value[0] === "%" ? value.slice(1) : value) || this.skin;
-            if (this.skin === null || !knownSkins.hasOwnProperty(this.skin) || loadedSkins[this.skin])
-                return;
-            loadedSkins[this.skin] = new Image();
-            loadedSkins[this.skin].src = `${SKIN_URL}${this.skin}.png`;
-        },
-        setColor: function(value) {
-            if (!value) { log.warn("got no color"); return; }
-            this.color = value;
-            this.sColor = darkenColor(value);
-        },
-        draw: function(ctx) {
-            ctx.save();
-            this.drawShape(ctx);
-            this.drawText(ctx);
-            ctx.restore();
-        },
-        drawShape: function(ctx) {
-            ctx.fillStyle = settings.showColor ? this.color : Cell.prototype.color;
-            /* Do not add stroke to pellets, they will performace */
-            ctx.strokeStyle = settings.showColor ? this.sColor : Cell.prototype.sColor;
-            ctx.lineWidth = Math.max(~~(this.s / 50), 10);
-            if (!this.ejected && 20 < this.s)
-                this.s -= ctx.lineWidth / 2 - 2;
-
-            ctx.beginPath();
-            if (this.jagged) {
-                var pointCount = 120;
-                var incremental = PI_2 / pointCount;
-                ctx.moveTo(this.x, this.y + this.s + 3);
-                for (var i = 1; i < pointCount; i++) {
-                    var angle = i * incremental;
-                    var dist = this.s - 3 + (i % 2 === 0) * 6;
-                    ctx.lineTo(
-                        this.x + dist * Math.sin(angle),
-                        this.y + dist * Math.cos(angle)
-                    )
-                }
-                ctx.lineTo(this.x, this.y + this.s + 3);
-            } else ctx.arc(this.x, this.y, this.s, 0, PI_2, false);
-            ctx.closePath();
-
-            if (this.destroyed)
-                ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
-            else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
-
-            if(!(this.ejected) && 20 < this.size) ctx.stroke();
-            //IF this.skin, then darken the stroke style to ensure that we can see what color
-            ctx.fill();
-            if (settings.showSkins && this.skin) {
-                var skin = loadedSkins[this.skin];
-                if (skin && skin.complete && skin.width && skin.height) {
-                    ctx.save();
-                    ctx.clip();
-                    scaleBack(ctx);
-                    var sScaled = this.s * cameraZ;
-                    ctx.drawImage(skin,
-                        this.x * cameraZ - sScaled,
-                        this.y * cameraZ - sScaled,
-                        sScaled *= 2, sScaled);
-                    scaleForth(ctx);
-                    ctx.restore();
-                }
-            }
-            if (!this.ejected && 20 < this.s)
-                this.s += ctx.lineWidth / 2 - 2;
-        },
-        drawText: function(ctx) {
-            if (this.s < 20 || this.jagged) return;
-            if (settings.showMass && (cells.mine.indexOf(this.id) !== -1 || cells.mine.length === 0)) {
-                var mass = (~~(this.s * this.s / 100)).toString();
-                if (this.name && settings.showNames) {
-                    drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
-                    var y = this.y + Math.max(this.s / 4.5, this.nameSize / 1.5);
-                    drawText(ctx, true, this.x, y, this.nameSize / 2, this.drawNameSize / 2, mass);
-                } else drawText(ctx, true, this.x, this.y, this.nameSize / 2, this.drawNameSize / 2, mass);
-            } else if (this.name && settings.showNames)
-                drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
-        }
-    };
 
 
     function cacheCleanup() {
