@@ -6,12 +6,13 @@ import snake from "../img/fire.png"
 import fire from "../img/snake.png"
 import Cell from "./Cell"
 
-import pubsub from 'pubsub-js';
-import css  from "../css/index.css"
-import {topics} from "./utils";
+import css from "../css/index.css"
+import {pubsub, topics} from "./utils";
+import textUtils from "./textcache";
+import SETTINGS from "./settings"
 
 
-(function(wHandle, wjQuery) {
+(function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
         console.log(`${msg} is gay and ${data}`);
     };
@@ -20,24 +21,31 @@ import {topics} from "./utils";
     var token = pubsub.subscribe('x', mySubscriber);
     pubsub.publish('x', 'hello world!');
 
-    function byId(id) {return document.getElementById(id);}
-    function byClass(clss, parent) {return (parent || document).getElementsByClassName(clss);}
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
+    function byClass(clss, parent) {
+        return (parent || document).getElementsByClassName(clss);
+    }
+
     console.log(wjQuery);
     if (navigator.appVersion.indexOf("MSIE") != -1)
-	   alert("You're using a pretty old browser, some parts of the website might not work properly.");
+        alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
-    Date.now || (Date.now = function() {
+    Date.now || (Date.now = function () {
         return (+new Date).getTime();
     });
     var LOAD_START = Date.now();
-    Array.prototype.peek = function() {
+    Array.prototype.peek = function () {
         return this[this.length - 1];
     };
-    Array.prototype.remove = function(a) {
+    Array.prototype.remove = function (a) {
         var i = this.indexOf(a);
         if (i !== -1) this.splice(i, 1);
         return i !== -1;
     };
+
     function bytesToColor(r, g, b) {
         var r1 = ("00" + (~~r).toString(16)).slice(-2);
         var g1 = ("00" + (~~g).toString(16)).slice(-2);
@@ -46,9 +54,14 @@ import {topics} from "./utils";
     }
 
     function loadImage(url) {
-        return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
+        return new Promise(r => {
+            let i = new Image();
+            i.onload = (() => r(i));
+            i.src = url;
+        });
     }
-    var images = {fire:null, snake: null,minimap:null,fireimage:null};
+
+    var images = {fire: null, snake: null, minimap: null, fireimage: null};
 
     // function syncLoadImages() {
     //     for( let i = 0,file,img; i <filenames.length; i++ ){
@@ -60,31 +73,41 @@ import {topics} from "./utils";
     //         }
     //     }
     // }
-     function syncLoadImages(){
-         const myimage = new Image();
-         myimage.src = map;
-         images["minimap"] = myimage;
+    function syncLoadImages() {
+        const myimage = new Image();
+        myimage.src = map;
+        images["minimap"] = myimage;
 
-         const thatimage = new Image();
-         thatimage.src = fire;
-         images["fire"] = thatimage
+        const thatimage = new Image();
+        thatimage.src = fire;
+        images["fire"] = thatimage;
 
-         const x = new Image();
-         x.src = snake;
-         images["snake"] = x;
-     }
+        const x = new Image();
+        x.src = snake;
+        images["snake"] = x;
+    }
 
     function colorToBytes(color) {
         if (color.length === 4)
-            return { r: parseInt(color[1] + color[1], 16), g: parseInt(color[2] + color[2], 16), b: parseInt(color[3] + color[3], 16) };
+            return {
+                r: parseInt(color[1] + color[1], 16),
+                g: parseInt(color[2] + color[2], 16),
+                b: parseInt(color[3] + color[3], 16)
+            };
         else if (color.length === 7)
-            return { r: parseInt(color[1] + color[2], 16), g: parseInt(color[3] + color[4], 16), b: parseInt(color[5] + color[6], 16) };
+            return {
+                r: parseInt(color[1] + color[2], 16),
+                g: parseInt(color[3] + color[4], 16),
+                b: parseInt(color[5] + color[6], 16)
+            };
         throw new Error(`invalid color ${color}`);
     }
+
     function darkenColor(color) {
         var a = colorToBytes(color);
         return bytesToColor(a.r * .9, a.g * .9, a.b * .9);
     }
+
     function cleanupObject(object) {
         for (var i in object)
             delete object[i];
@@ -93,10 +116,22 @@ import {topics} from "./utils";
 
     var log = {
         verbosity: 4,
-        error: function(a) { if (log.verbosity <= 0) return; console.error(a); },
-        warn: function(a) { if (log.verbosity <= 1) return; console.warn(a); },
-        info: function(a) { if (log.verbosity <= 2) return; console.info(a); },
-        debug: function(a) { if (log.verbosity <= 3) return; console.debug(a); }
+        error: function (a) {
+            if (log.verbosity <= 0) return;
+            console.error(a);
+        },
+        warn: function (a) {
+            if (log.verbosity <= 1) return;
+            console.warn(a);
+        },
+        info: function (a) {
+            if (log.verbosity <= 2) return;
+            console.info(a);
+        },
+        debug: function (a) {
+            if (log.verbosity <= 3) return;
+            console.debug(a);
+        }
     };
 
     var wsUrl = null,
@@ -126,6 +161,7 @@ import {topics} from "./utils";
         ws.close();
         ws = null;
     }
+
     function wsInit(url) {
         if (ws) {
             log.debug("ws init on existing conn");
@@ -139,32 +175,37 @@ import {topics} from "./utils";
         ws.onerror = wsError;
         ws.onclose = wsClose;
     }
+
     function wsOpen() {
         disconnectDelay = 1000;
         wjQuery("#connecting").hide();
         wsSend(SEND_254);
         wsSend(SEND_255);
-        document.getElementById("togglelb").style.display="block";
+        document.getElementById("togglelb").style.display = "block";
         log.debug(`ws connected, using https: ${USE_HTTPS}`);
     }
+
     function wsError(error) {
         log.warn(error);
     }
+
     function wsClose(e) {
         log.debug(`ws disconnected ${e.code} '${e.reason}'`);
         wsCleanup();
         gameReset();
-        setTimeout(function() {
+        setTimeout(function () {
             if (ws && ws.readyState === 1) return;
             wsInit(wsUrl);
         }, disconnectDelay *= 1.5);
     }
+
     function wsSend(data) {
         if (!ws) return;
         if (ws.readyState !== 1) return;
         if (data.build) ws.send(data.build());
         else ws.send(data);
     }
+
     function wsMessage(data) {
         syncUpdStamp = Date.now();
         var reader = new Reader(new DataView(data.data), 0, true);
@@ -181,7 +222,7 @@ import {topics} from "./utils";
                     killed = reader.getUint32();
                     if (!cells.byId.hasOwnProperty(killer) || !cells.byId.hasOwnProperty(killed))
                         continue;
-                    cells.byId[killed].destroy(killer,syncUpdStamp,cells);
+                    cells.byId[killed].destroy(killer, syncUpdStamp, cells);
                 }
 
                 // update records
@@ -203,7 +244,7 @@ import {topics} from "./utils";
 
                     if (cells.byId.hasOwnProperty(id)) {
                         cell = cells.byId[id];
-                        cell.update(syncUpdStamp,cells);
+                        cell.update(syncUpdStamp, cells);
                         cell.updated = syncUpdStamp;
                         cell.ox = cell.x;
                         cell.oy = cell.y;
@@ -215,7 +256,7 @@ import {topics} from "./utils";
                         if (skin) cell.setSkin(skin);
                         if (name) cell.setName(name);
                     } else {
-                        cell = new Cell(id, x, y, s, name, color, skin, flags,syncUpdStamp);
+                        cell = new Cell(id, x, y, s, name, color, skin, flags, syncUpdStamp);
                         cells.byId[id] = cell;
                         cells.list.push(cell);
                     }
@@ -225,9 +266,8 @@ import {topics} from "./utils";
                 for (i = 0; i < count; i++) {
                     killed = reader.getUint32();
                     if (cells.byId.hasOwnProperty(killed) && !cells.byId[killed].destroyed)
-                        cells.byId[killed].destroy(null,syncUpdStamp,cells);
+                        cells.byId[killed].destroy(null, syncUpdStamp, cells);
                     //moved this functionality over
-                        delete cells.byId[this.id];
                 }
                 break;
             case 0x11: // update pos
@@ -236,9 +276,8 @@ import {topics} from "./utils";
                 targetZ = reader.getFloat32();
                 break;
             case 0x12: // clear all
-                for (var i in cells.byId){
-                    cells.byId[i].destroy(null,syncUpdStamp,cells);   // what the fuck is this
-                    delete cells.byId[this.id];
+                for (var i in cells.byId) {
+                    cells.byId[i].destroy(null, syncUpdStamp, cells);   // what the fuck is this
                 }
 
 
@@ -300,7 +339,7 @@ import {topics} from "./utils";
                 }
                 reader.getUint32(); // game type
                 if (!/MultiOgar|OgarII/.test(reader.getStringUTF8()) || stats.pingLoopId) break;
-                stats.pingLoopId = setInterval(function() {
+                stats.pingLoopId = setInterval(function () {
                     wsSend(UINT8_CACHE[254]);
                     stats.pingLoopStamp = Date.now();
                 }, 2000);
@@ -322,7 +361,7 @@ import {topics} from "./utils";
                 console.log("Minimap packet has arrived");
                 minimapNodes.nodes = [];
                 count = reader.getUint16();
-                for(let  i = 0; i < count; i++){
+                for (let i = 0; i < count; i++) {
                     minimapNodes.nodes.push({
                         x: reader.getInt32(),
                         y: reader.getInt32(),
@@ -345,10 +384,7 @@ import {topics} from "./utils";
                     admin = !!(flags & 0x40),
                     mod = !!(flags & 0x20);
 
-                if (server && name !== "SERVER") name = "[SERVER] " + name;
-                if (admin) name = "[ADMIN] " + name;
-                if (mod) name = "[MOD] " + name;
-                var wait = Math.max(3000, 1000 + message.length * 150);
+                var wait = Math.max(5000, 1000 + message.length * 200);
                 chat.waitUntil = syncUpdStamp - chat.waitUntil > 1000 ? syncUpdStamp + wait : chat.waitUntil + wait;
                 chat.messages.push({
                     server: server,
@@ -372,6 +408,7 @@ import {topics} from "./utils";
                 break;
         }
     }
+
     function sendMouseMove(x, y) {
         var writer = new Writer(true);
         writer.setUint8(0x10);
@@ -380,13 +417,24 @@ import {topics} from "./utils";
         writer._b.push(0, 0, 0, 0);
         wsSend(writer);
     }
-    function sendPlay(name) {
+
+    let randomName;
+    /* This will generate a random name for us */
+    const computeName = function () {
+        return `Azma.io#${Math.floor((Math.random() * 1000) + 1)}`;
+    };
+
+    function sendPlay(inputName) {
+        /* if inputName is "",null,or undefined then we check if we have a randomName compued for us */
+        let name = inputName || (randomName ? randomName : randomName = computeName());
+
         log.debug("play trigger");
         var writer = new Writer(true);
         writer.setUint8(0x00);
         writer.setStringUTF8(name);
         wsSend(writer);
     }
+
     function sendChat(text) {
         var writer = new Writer();
         writer.setUint8(0x63);
@@ -400,11 +448,12 @@ import {topics} from "./utils";
         cleanupObject(border);
         cleanupObject(leaderboard);
         cleanupObject(chat);
+        //todo emit gamereset so that everything can be cleaned up;
         cleanupObject(stats);
         chat.messages = [];
         leaderboard.items = [];
         cells.mine = [];
-        cells.byId = { };
+        cells.byId = {};
         cells.list = [];
         cameraX = cameraY = targetX = targetY = 0;
         cameraZ = targetZ = 1;
@@ -413,7 +462,7 @@ import {topics} from "./utils";
 
     var cells = Object.create({
         mine: [],
-        byId: { },
+        byId: {},
         list: [],
     });
     var border = Object.create({
@@ -427,7 +476,7 @@ import {topics} from "./utils";
         centerY: -1
     });
     var minimapNodes = Object.create({
-     nodes:[]
+        nodes: []
         }
     );
     var leaderboard = Object.create({
@@ -464,8 +513,8 @@ import {topics} from "./utils";
 
     var mainCanvas = null;
     var mainCtx = null;
-    var knownSkins = { };
-    var loadedSkins = { };
+    var knownSkins = {};
+    var loadedSkins = {};
     var escOverlayShown = false;
     var isTyping = false;
     var chatBox = null;
@@ -489,7 +538,6 @@ import {topics} from "./utils";
         showLeaderboard: true,
         showChat: true,
         showGrid: true,
-        showTextOutline: true,
         showColor: true,
         showSkins: true,
         showMinimap: true,
@@ -508,8 +556,8 @@ import {topics} from "./utils";
     };
 
     if (null !== wHandle.localStorage) {
-        wjQuery(window).on('load',function() {
-            wjQuery(".save").each(function() {
+        wjQuery(window).on('load', function () {
+            wjQuery(".save").each(function () {
                 var id = wjQuery(this).data("box-id");
                 var value = wHandle.localStorage.getItem("checkbox-" + id);
                 if (value && value == "true" && 0 != id) {
@@ -518,7 +566,7 @@ import {topics} from "./utils";
                 } else if (id == 0 && value != null)
                     wjQuery(this).val(value);
             });
-            wjQuery(".save").change(function() {
+            wjQuery(".save").change(function () {
                 var id = wjQuery(this).data("box-id");
                 var value = (id == 0) ? wjQuery(this).val() : wjQuery(this).prop("checked");
                 wHandle.localStorage.setItem("checkbox-" + id, value);
@@ -530,19 +578,28 @@ import {topics} from "./utils";
         escOverlayShown = false;
         wjQuery("#overlays").hide();
     }
+
     function showESCOverlay() {
         escOverlayShown = true;
         wjQuery("#overlays").fadeIn(0);
     }
-    pubsub.subscribe(topics.showEscapeoverlay,showESCOverlay);
+
+    pubsub.subscribe(topics.showEscapeoverlay, showESCOverlay);
 
     function toCamera(ctx) {
         ctx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
         scaleForth(ctx);
         ctx.translate(-cameraX, -cameraY);
     }
-    function scaleForth(ctx) { ctx.scale(cameraZ, cameraZ); }
-    function scaleBack(ctx) { ctx.scale(cameraZInvd, cameraZInvd); }
+
+    function scaleForth(ctx) {
+        ctx.scale(cameraZ, cameraZ);
+    }
+
+    function scaleBack(ctx) {
+        ctx.scale(cameraZInvd, cameraZInvd);
+    }
+
     function fromCamera(ctx) {
         ctx.translate(cameraX, cameraY);
         scaleBack(ctx);
@@ -588,7 +645,7 @@ import {topics} from "./utils";
             for (var j = 0; j < complexes.length; j++) {
                 ctx.font = "18px Ubuntu";
                 ctx.fillStyle = complexes[j].color;
-                ctx.fillText(complexes[j].text, width, 20 * (1 + i));
+                ctx.fillText(complexes[j].text, width, 22 * (1 + i));
                 width += complexes[j].width;
             }
         }
@@ -619,6 +676,7 @@ import {topics} from "./utils";
         for (var i = 0; i < rows.length; i++)
             ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
     }
+
     function prettyPrintTime(seconds) {
         seconds = ~~seconds;
         var minutes = ~~(seconds / 60);
@@ -630,12 +688,12 @@ import {topics} from "./utils";
         return days + "d";
     }
 
-     function drawLeaderboard() {
+    function drawLeaderboard() {
         if (leaderboard.type === NaN) return leaderboard.visible = false;
         if (!settings.showNames || leaderboard.items.length === 0)
             return leaderboard.visible = false;
         leaderboard.visible = true;
-       // var canvas = leaderboard.canvas;
+        // var canvas = leaderboard.canvas;
         var canvas = document.getElementById('leaderboardcanvas');
         let lbctxt = canvas.getContext("2d");
         var len = leaderboard.items.length;
@@ -645,7 +703,7 @@ import {topics} from "./utils";
 
         lbctxt.globalAlpha = .4;
         lbctxt.fillStyle = "#000";
-        lbctxt.fillRect(0, 0,canvas.width, canvas.height);
+        lbctxt.fillRect(0, 0, canvas.width, canvas.height);
 
         lbctxt.globalAlpha = 1;
         lbctxt.fillStyle = "yellow";
@@ -673,7 +731,7 @@ import {topics} from "./utils";
                     text = leaderboard.items[i];
                 else
                     text = leaderboard.items[i].name,
-                    isMe = leaderboard.items[i].me;
+                        isMe = leaderboard.items[i].me;
 
                 // replace {skin} with empty string
                 var reg = /\{([\w]+)\}/.exec(text);
@@ -682,22 +740,25 @@ import {topics} from "./utils";
                 //lbctxt.fillStyle = isMe ? "#FAA" : leaderboard.items[i].color;
                 lbctxt.fillStyle = isMe ? "yellow" : leaderboard.items[i].color;
                 text = (i + 1) + ". " + (text || "An unnamed cell");
-                while(lbctxt.measureText(text).width  > canvas.width - textOffset  )  { text = text.substring(0, text.length  -1);}
-                if( i == 0) lbctxt.drawImage(images.snake,5,52 + 24 * 8 ,20,20);
-                if( i == 1) lbctxt.drawImage(images.fire,5,52  ,20,20);
+                while (lbctxt.measureText(text).width > canvas.width - textOffset) {
+                    text = text.substring(0, text.length - 1);
+                }
+                if (i == 0) lbctxt.drawImage(images.snake, 5, 52 + 24 * 8, 20, 20);
+                if (i == 1) lbctxt.drawImage(images.fire, 5, 52, 20, 20);
                 //what is the step value for the fire emoji?
 
-                lbctxt.fillText(text,textOffset, 70 + 24 * i);
+                lbctxt.fillText(text, textOffset, 70 + 24 * i);
             }
         }
     }
+
     function drawGrid() {
         mainCtx.save();
         mainCtx.lineWidth = 1;
         mainCtx.strokeStyle = settings.darkTheme ? "#AAA" : "#000";
         mainCtx.globalAlpha = 0.1;
         var step = 50;
-        let  cW = mainCanvas.width;
+        let cW = mainCanvas.width;
         let cH = mainCanvas.height;
         let startLeft = (-cameraX + cW / cameraZ / 2) % step,
             startTop = (-cameraY + cH / cameraZ / 2) % step;
@@ -729,32 +790,31 @@ import {topics} from "./utils";
         var targetSize = 200;
         var width = targetSize * (border.width / border.height);
         var height = targetSize * (border.height / border.width);
-        var beginX = mainCanvas.width / viewMult - width - offset ;
-        var beginY = mainCanvas.height / viewMult - height - offset ;
+        var beginX = mainCanvas.width / viewMult - width - offset;
+        var beginY = mainCanvas.height / viewMult - height - offset;
 
         mainCtx.fillStyle = "#000";
         mainCtx.globalAlpha = 0.9;
         mainCtx.fillRect(beginX, beginY, width, height);
         mainCtx.globalAlpha = 1;
         //Offset relative to right side of window, how much spacing is between right side of map and right side of window.
-        mainCtx.drawImage(images.minimap, beginX,beginY, width, height);
+        mainCtx.drawImage(images.minimap, beginX, beginY, width, height);
 
         mainCtx.fillStyle = settings.darkTheme ? "#666" : "#666";
         mainCtx.textBaseline = "middle";
         mainCtx.textAlign = "center";
 
 
-
         var myPosX = beginX + ((cameraX + border.width / 2) / border.width * width);
         var myPosY = beginY + ((cameraY + border.height / 2) / border.height * height);
-        for(let i = 0; i < minimapNodes.nodes.length; i++){
+        for (let i = 0; i < minimapNodes.nodes.length; i++) {
             let node = minimapNodes.nodes[i];
             let nodeX = beginX + (node.x + border.width / 2) / border.width * width;
-            let nodeY =  beginY + ( node.y + border.height / 2) / border.height * height;
+            let nodeY = beginY + (node.y + border.height / 2) / border.height * height;
             mainCtx.fillStyle = node.color;
             mainCtx.beginPath();
 
-            mainCtx.arc(nodeX,nodeY , 4, 0, PI_2, false);
+            mainCtx.arc(nodeX, nodeY, 4, 0, PI_2, false);
             mainCtx.closePath();
             mainCtx.fill();
         }
@@ -776,12 +836,16 @@ import {topics} from "./utils";
     }
 
     function drawGame() {
+        //todo why is Statsstuff being updated here?
         stats.framesPerSecond += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.framesPerSecond) / 10;
         syncAppStamp = Date.now();
 
+        //emit appStamp
+        pubsub.publish(topics.syncAPPstamp, syncAppStamp);
+
         var drawList = cells.list.slice(0).sort(cellSort);
         for (var i = 0, l = drawList.length; i < l; i++)
-            drawList[i].update(syncAppStamp,cells);
+            drawList[i].update(syncAppStamp, cells);
         cameraUpdate();
 
         mainCtx.save();
@@ -793,7 +857,7 @@ import {topics} from "./utils";
         toCamera(mainCtx);
 
         for (var i = 0, l = drawList.length; i < l; i++)
-            drawList[i].draw(mainCtx,cells);
+            drawList[i].draw(mainCtx, cells);
 
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
@@ -801,6 +865,8 @@ import {topics} from "./utils";
         var height = 2;
         mainCtx.fillStyle = settings.darkTheme ? "#FFF" : "#000";
         mainCtx.textBaseline = "top";
+
+        //todo why is Statsstuff being drawn here?
         if (!isNaN(stats.score)) {
             mainCtx.font = "30px Ubuntu";
             mainCtx.fillText(`Score: ${stats.score}`, 2, height);
@@ -819,20 +885,19 @@ import {topics} from "./utils";
             //     leaderboard.canvas,
             //     mainCanvas.width / viewMult - 10 - leaderboard.canvas.width,
             //     10);
-        if (chat.visible || isTyping) {
-            mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - syncAppStamp + chat.waitUntil, 0) / 1000;
-            mainCtx.drawImage(
-                chat.canvas,
-                10 / viewMult,
-                (mainCanvas.height - 55) / viewMult - chat.canvas.height
-            );
-            mainCtx.globalAlpha = 1;
-        }
+            if (chat.visible || isTyping) {
+                mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - syncAppStamp + chat.waitUntil, 200) / 1000;
+                mainCtx.drawImage(
+                    chat.canvas,
+                    10 / viewMult,
+                    (mainCanvas.height - 55) / viewMult - chat.canvas.height
+                );
+                mainCtx.globalAlpha = 1;
+            }
         drawMinimap();
 
         mainCtx.restore();
-
-        cacheCleanup();
+        pubsub.publish(topics.textCacheCleanup);
         wHandle.requestAnimationFrame(drawGame);
     }
 
@@ -867,147 +932,11 @@ import {topics} from "./utils";
         } else {
             stats.score = NaN;
             stats.maxScore = 0;
-            cameraX += (targetX - cameraX) / 20;
-            cameraY += (targetY - cameraY) / 20;
+            cameraX += (targetX - cameraX) / 9;
+            cameraY += (targetY - cameraY) / 9;
         }
         cameraZ += (targetZ * viewMult * mouseZ - cameraZ) / 9;
         cameraZInvd = 1 / cameraZ;
-    }
-
-
-    function cacheCleanup() {
-        for (var i in cachedNames) {
-            for (var j in cachedNames[i])
-                if (syncAppStamp - cachedNames[i][j].accessTime >= 5000)
-                    delete cachedNames[i][j];
-            if (cachedNames[i] === { }) delete cachedNames[i];
-        }
-        for (var i in cachedMass)
-            if (syncAppStamp - cachedMass[i].accessTime >= 5000)
-                delete cachedMass[i];
-    }
-
-    // 2-var draw-stay cache
-    var cachedNames = { };
-    var cachedMass  = { };
-
-    function drawTextOnto(canvas, ctx, text, size) {
-        ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
-        canvas.width = ctx.measureText(text).width + 2 * ctx.lineWidth;
-        canvas.height = 4 * size;
-        ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#FFF"
-        ctx.strokeStyle = "#000";
-        ctx.translate(canvas.width / 2, 2 * size);
-        (ctx.lineWidth !== 1) && ctx.strokeText(text, 0, 0);
-        ctx.fillText(text, 0, 0);
-    }
-    function drawRaw(ctx, x, y, text, size) {
-        ctx.font = `${size}px Ubuntu`;
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
-        ctx.fillStyle = "#FFF"
-        ctx.strokeStyle = "#000";
-        (ctx.lineWidth !== 1) && ctx.strokeText(text, x, y);
-        ctx.fillText(text, x, y);
-        ctx.restore();
-    }
-    function newNameCache(value, size) {
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext("2d");
-        drawTextOnto(canvas, ctx, value, size);
-
-        cachedNames[value] = cachedNames[value] || { };
-        cachedNames[value][size] = {
-            width: canvas.width,
-            height: canvas.height,
-            canvas: canvas,
-            value: value,
-            size: size,
-            accessTime: syncAppStamp
-        };
-        return cachedNames[value][size];
-    }
-    function newMassCache(size) {
-        var canvases = {
-            "0": { }, "1": { }, "2": { }, "3": { }, "4": { },
-            "5": { }, "6": { }, "7": { }, "8": { }, "9": { }
-        };
-        for (var value in canvases) {
-            var canvas = canvases[value].canvas = document.createElement("canvas");
-            var ctx = canvas.getContext("2d");
-            drawTextOnto(canvas, ctx, value, size);
-            canvases[value].canvas = canvas;
-            canvases[value].width = canvas.width;
-            canvases[value].height = canvas.height;
-        }
-        cachedMass[size] = {
-            canvases: canvases,
-            size: size,
-            lineWidth: settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2,
-            accessTime: syncAppStamp
-        };
-        return cachedMass[size];
-    }
-    function toleranceTest(a, b, tolerance) {
-        return (a - tolerance) <= b && b <= (a + tolerance);
-    }
-    function getNameCache(value, size) {
-        if (!cachedNames[value]) return newNameCache(value, size);
-        var sizes = Object.keys(cachedNames[value]);
-        for (var i = 0, l = sizes.length; i < l; i++)
-            if (toleranceTest(size, sizes[i], size / 4))
-                return cachedNames[value][sizes[i]];
-        return newNameCache(value, size);
-    }
-    function getMassCache(size) {
-        var sizes = Object.keys(cachedMass);
-        for (var i = 0, l = sizes.length; i < l; i++)
-            if (toleranceTest(size, sizes[i], size / 4))
-                return cachedMass[sizes[i]];
-        return newMassCache(size);
-    }
-
-    function drawText(ctx, isMass, x, y, size, drawSize, value) {
-        ctx.save();
-        if (size > 500) return drawRaw(ctx, x, y, value, drawSize);
-        ctx.imageSmoothingQuality = "high";
-        if (isMass) {
-            var cache = getMassCache(size);
-            cache.accessTime = syncAppStamp;
-            var canvases = cache.canvases;
-            var correctionScale = drawSize / cache.size;
-
-            // calculate width
-            var width = 0;
-            for (var i = 0; i < value.length; i++)
-                width += canvases[value[i]].width - 2 * cache.lineWidth;
-            
-            ctx.scale(correctionScale, correctionScale);
-            x /= correctionScale;
-            y /= correctionScale;
-            x -= width / 2;
-            for (var i = 0; i < value.length; i++) {
-                var item = canvases[value[i]];
-                ctx.drawImage(item.canvas, x, y - item.height / 2);
-                x += item.width - 2 * cache.lineWidth;
-            }
-        } else {
-            var cache = getNameCache(value, size);
-            cache.accessTime = syncAppStamp;
-            var canvas = cache.canvas;
-            var correctionScale = drawSize / cache.size;
-            ctx.scale(correctionScale, correctionScale);
-            x /= correctionScale;
-            y /= correctionScale;
-            ctx.drawImage(canvas, x - canvas.width / 2, y - canvas.height / 2);
-        }
-        ctx.restore();
     }
 
     function init() {
@@ -1016,18 +945,24 @@ import {topics} from "./utils";
         chatBox = document.getElementById("chat_textbox");
         mainCanvas.focus();
 
+        textUtils.init();
+        SETTINGS.init();
+
+
         //load critical images
         syncLoadImages();
+
         function handleScroll(event) {
             mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
             1 > mouseZ && (mouseZ = 1);
             mouseZ > 4 / mouseZ && (mouseZ = 4 / mouseZ);
         }
+
         if (/firefox/i.test(navigator.userAgent))
             document.addEventListener("DOMMouseScroll", handleScroll, false);
         else
             document.body.onmousewheel = handleScroll;
-        wHandle.onkeydown = function(event) {
+        wHandle.onkeydown = function (event) {
             switch (event.keyCode) {
                 case 13: // enter
                     if (escOverlayShown) break;
@@ -1082,7 +1017,7 @@ import {topics} from "./utils";
                     break;
             }
         };
-        wHandle.onkeyup = function(event) {
+        wHandle.onkeyup = function (event) {
             switch (event.keyCode) {
                 case 32: // space
                     pressed.space = false;
@@ -1111,26 +1046,26 @@ import {topics} from "./utils";
                     break;
             }
         };
-        chatBox.onblur = function() {
+        chatBox.onblur = function () {
             isTyping = false;
             drawChat();
         };
-        chatBox.onfocus = function() {
+        chatBox.onfocus = function () {
             isTyping = true;
             drawChat();
         };
-        mainCanvas.onmousemove = function(event) {
+        mainCanvas.onmousemove = function (event) {
             mouseX = event.clientX;
             mouseY = event.clientY;
         };
-        setInterval(function() {
+        setInterval(function () {
             // send mouse update
             sendMouseMove(
                 (mouseX - mainCanvas.width / 2) / cameraZ + cameraX,
                 (mouseY - mainCanvas.height / 2) / cameraZ + cameraY
             );
         }, 40);
-        wHandle.onresize = function() {
+        wHandle.onresize = function () {
             var cW = mainCanvas.width = wHandle.innerWidth,
                 cH = mainCanvas.height = wHandle.innerHeight;
             viewMult = Math.sqrt(Math.min(cH / 1080, cW / 1920));
@@ -1141,53 +1076,55 @@ import {topics} from "./utils";
         showESCOverlay();
 
         if (settings.allowGETipSet && wHandle.location.search) {
-            var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
+            var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1));
             if (div) wsInit(`${div[1]}:${div[2]}`);
         }
 
         window.requestAnimationFrame(drawGame);
 
     }
-    wHandle.setserver = function(arg = 'backend.azma.io') {
+
+    wHandle.setserver = function (arg = 'backend.azma.io') {
         if (wsUrl === arg) return;
         wsInit(arg);
     };
-    wHandle.setDarkTheme = function(a) {
+    wHandle.setDarkTheme = function (a) {
         settings.darkTheme = a;
         drawStats();
     };
-    wHandle.setShowMass = function(a) {
+    wHandle.setShowMass = function (a) {
         settings.showMass = a;
     };
-    wHandle.setSkins = function(a) {
+    wHandle.setSkins = function (a) {
         settings.showSkins = a;
     };
-    wHandle.setColors = function(a) {
+    wHandle.setColors = function (a) {
         settings.showColor = !a;
     };
-    wHandle.setNames = function(a) {
+    wHandle.setNames = function (a) {
         settings.showNames = a;
         drawLeaderboard();
     };
-    wHandle.setChatHide = function(a) {
+    wHandle.setChatHide = function (a) {
         settings.showChat = !a;
         drawChat();
     };
-    wHandle.setMinimap = function(a) {
+    wHandle.setMinimap = function (a) {
         settings.showMinimap = !a;
     };
-    wHandle.spectate = function(a) {
+    wHandle.spectate = function (a) {
         wsSend(UINT8_CACHE[1]);
+        //todo emit that we are in spectatemode, so stats can upadte it's maxscore to 0;
         stats.maxScore = 0;
         hideESCOverlay();
     };
-    wHandle.toggleleaderboard = function(){
+    wHandle.toggleleaderboard = function () {
         //check if teammodefirst
         //send a special instruction to the server to toggle leaderboard positions
         wsSend(UINT8_CACHE[69]);
         console.log("I am printed");
     };
-    wHandle.play = function(a) {
+    wHandle.play = function (a) {
         sendPlay(a);
         hideESCOverlay();
     };
