@@ -6,147 +6,170 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Eat cells smaller than you and don't get eaten by the bigger ones, as an MMO">
-    <meta name="keywords" content="agario, agar, io, cell, cells, virus, bacteria, blob, game, games, web game, html5, fun, flash">
+    <meta content="agario, agar, io, cell, cells, virus, bacteria, blob, game, games, web game, html5, fun, flash"
+          name="keywords">
     <meta name="robots" content="index, follow">
-    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+          name="viewport">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     <title>Home - Cigar</title>
 
-    <link id="favicon" rel="icon" type="image/png" href="./img/favicon.png" />
+    <link href="./img/favicon.png" id="favicon" rel="icon" type="image/png"/>
     <link href='https://fonts.googleapis.com/css?family=Ubuntu:700' rel='stylesheet' type='text/css'>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-<!--    <link href="assets/css/index.css" rel="stylesheet">-->
+    <!--    <link href="assets/css/index.css" rel="stylesheet">-->
 
     <script src="https://kit.fontawesome.com/2dda43642d.js" crossorigin="anonymous"></script>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-<!--    <script type='module' src="js/main_out.js" defer></script>-->
+    <!--    <script type='module' src="js/main_out.js" defer></script>-->
 </head>
 
 <body>
-    <div class="modal fade" id="inPageModal" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 id="inPageModalTitle" class="modal-title">Failed to Load</h4>
+<div class="modal fade" id="inPageModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" type="button">&times;</button>
+                <h4 class="modal-title" id="inPageModalTitle">Failed to Load</h4>
+            </div>
+            <div class="modal-body" id="inPageModalBody">
+                <p>Failed to load. Please check your connection!</p>
+                <div class="center">
+                    <div class="loader"></div>
                 </div>
-                <div id="inPageModalBody" class="modal-body">
-                    <p>Failed to load. Please check your connection!</p>
-                    <div class="center">
-                        <div class="loader"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
             </div>
         </div>
     </div>
-    <div id="overlays">
-        <div id="helloDialog">
-            <form role="form">
-<!--                    <img id="banner" src="assets/img/banner.png" alt="Banner Image"/>-->
-                    <img id="banner" src="./img/banner.png" alt="Banner Image"/>
-                    <p  style="text-align: center; font-style: italic;">Banner made by my niece -Tariq</p>
+</div>
+<div id="overlays">
+    <div id="helloDialog">
+        <form role="form" style="padding: 5px">
+            <!--                    <img id="banner" src="assets/img/banner.png" alt="Banner Image"/>-->
+            <img alt="Banner Image" id="banner" src="./img/banner.png"/>
+            <p style="text-align: center; font-style: italic;">Banner made by my niece -Tariq</p>
 
 
-                        <div class="form-group">
-                    <input id="nick" class="form-control save" data-box-id="0" placeholder="Nick" maxlength="15" />
-                    <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
-                        <option selected disabled>Servers:</option>
-                        <option value="backend.azma.io">AWS</option>
-                        <option value="127.0.0.1:443">Local</option>
-                    </select>
-                    <br clear="both" />
+            <div class="form-group">
+                <input class="form-control save" data-box-id="0" id="nick" maxlength="15" placeholder="Nick"/>
+                <select class="form-control" id="gamemode" onchange="setserver($(this).val());" required>
+                    <option disabled selected>Servers:</option>
+                    <option value="backend.azma.io">AWS</option>
+                    <option value="127.0.0.1:2000">Local</option>
+                </select>
+                <div id="skincontainer">
+                    <input class="form-control save" data-box-id="9" id="skinurl" maxlength="120"
+                           placeholder="Paste in the skin url here"/>
                 </div>
-                <div class="form-group">
+                <br clear="both"/>
+            </div>
+            <div class="form-group">
 
-                    <button type="button" id="play-btn" onclick="play(document.getElementById('nick').value); return false;" class="btn btn-play btn-primary btn-needs-server">Play</button>
-                    <button onclick="$('#settings, #instructions').toggle(); return false;" class="btn btn-info btn-settings" id="settings-btn"><i class="glyphicon glyphicon-cog"></i></button>
-                    <br clear="both" />
+                <button class="btn btn-play btn-primary btn-needs-server" id="play-btn"
+                        onclick="play(document.getElementById('nick').value,document.getElementById('skinurl').value); return false;"
+                        type="button">Play
+                </button>
+                <button class="btn btn-info btn-settings"
+                        id="settings-btn" onclick="$('#settings, #instructions').toggle(); return false;"><i
+                        class="glyphicon glyphicon-cog"></i>
+                </button>
+                <br clear="both"/>
+            </div>
+
+            <div class="checkbox" id="settings" style="display:none;">
+                <div class="form-group" id="mainform">
+                    <button class="btn btn-warning btn-spectate btn-needs-server" id="spectate-btn"
+                            onclick="spectate(); return false;"
+                            style="width: 100%">Spectate
+                    </button>
+                    <br clear="both"/>
                 </div>
-
-                <div id="settings" class="checkbox" style="display:none;">
-                    <div class="form-group" id="mainform">
-                        <button id="spectate-btn" onclick="spectate(); return false;" style="width: 100%" class="btn btn-warning btn-spectate btn-needs-server">Spectate
-                        </button>
-                        <br clear="both" />
-                    </div>
-                    <div style="margin: 6px;">
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="1" onchange="setSkins(!$(this).is(':checked'));"> No skins</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="2" onchange="setNames(!$(this).is(':checked'));"> No names</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="3" onchange="setDarkTheme($(this).is(':checked'));"> Dark theme</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="4" onchange="setColors($(this).is(':checked'));"> No colors</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="5" onchange="setShowMass($(this).is(':checked'));"> Show mass</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="7" onchange="setChatHide($(this).is(':checked'));"> Hide chat</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="8" onchange="setMinimap($(this).is(':checked'));"> Hide minimap</label>
-                    </div>
+                <div style="margin: 6px;">
+                    <label>
+                        <input class="save" data-box-id="1" onchange="setSkins(!$(this).is(':checked'));"
+                               type="checkbox"> No skins</label>
+                    <label>
+                        <input class="save" data-box-id="2" onchange="setNames(!$(this).is(':checked'));"
+                               type="checkbox"> No names</label>
+                    <label>
+                        <input class="save" data-box-id="3" onchange="setDarkTheme($(this).is(':checked'));"
+                               type="checkbox"> Dark theme</label>
+                    <label>
+                        <input class="save" data-box-id="4" onchange="setColors($(this).is(':checked'));"
+                               type="checkbox"> No colors</label>
+                    <label>
+                        <input class="save" data-box-id="5" onchange="setShowMass($(this).is(':checked'));"
+                               type="checkbox"> Show mass</label>
+                    <label>
+                        <input class="save" data-box-id="7" onchange="setChatHide($(this).is(':checked'));"
+                               type="checkbox"> Hide chat</label>
+                    <label>
+                        <input class="save" data-box-id="8" onchange="setMinimap($(this).is(':checked'));"
+                               type="checkbox"> Hide minimap</label>
                 </div>
-            </form>
+            </div>
+        </form>
 
-            <div id="instructions">
-                <hr/>
-                <center>
+        <div id="instructions">
+            <hr/>
+            <center>
                     <span class="text-muted">
                         Like what I'm doing? Buy me a coffee!
                     </span>
-                </center>
-            </div>
-
-
-
-
-                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-                    <input type="hidden" name="cmd" value="_donations" />
-                    <input type="hidden" name="business" value="G95W3KHDHGMWA" />
-                    <input type="hidden" name="item_name" value="Like the server? Donate to to show some support :) " />
-                    <input type="hidden" name="currency_code" value="EUR" />
-                    <input id="paypal" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-<!--                    <img alt="" border="0" src="https://www.paypal.com/en_CA/i/scr/pixel.gif" width="1" height="1" />-->
-                </form>
-
-
-
-            <hr />
-            <div id="footer">
-                <a title="Whitedeath Server link" href="http://ogar-teams.fun/1vs1/" class="text-muted">WhiteDeath's server! </a><br>
-                <a title="Ogar Devs discord link" href="https://discord.gg/XcKgShT" class="text-muted">Ogar Devs</a><br/>
-            </div>
+            </center>
         </div>
 
-        <div id="legal">
-            <a href="https://www.google.ca/" class = "textlegal">Privacy Policy</a>
-            <a href="https://www.google.ca/" class  = "textlegal">Terms of Service</a>
+
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+            <input name="cmd" type="hidden" value="_donations"/>
+            <input name="business" type="hidden" value="G95W3KHDHGMWA"/>
+            <input name="item_name" type="hidden" value="Like the server? Donate to to show some support :) "/>
+            <input name="currency_code" type="hidden" value="EUR"/>
+            <input alt="Donate with PayPal button" border="0" id="paypal"
+                   name="submit" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif"
+                   title="PayPal - The safer, easier way to pay online!"
+                   type="image"/>
+            <!--                    <img alt="" border="0" src="https://www.paypal.com/en_CA/i/scr/pixel.gif" width="1" height="1" />-->
+        </form>
+
+
+        <hr/>
+        <div id="footer">
+            <a class="text-muted" href="http://ogar-teams.fun/1vs1/" title="Whitedeath Server link">WhiteDeath's
+                server! </a><br>
+            <a class="text-muted" href="https://discord.gg/XcKgShT" title="Ogar Devs discord link">Ogar Devs</a><br/>
         </div>
-
     </div>
 
-    <div id="connecting">
-        <div style="width: 350px; background-color: #FFFFFF; margin: 100px auto; border-radius: 15px; padding: 5px 15px 5px 15px;">
-            <h2>Connecting</h2>
-            <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the connection.</p>
-        </div>
+    <div id="legal">
+        <a class="textlegal" href="https://www.google.ca/">Privacy Policy</a>
+        <a class="textlegal" href="https://www.google.ca/">Terms of Service</a>
     </div>
-    <div class = "btn canvasButtons toggle" id = "togglelb" onclick="toggleleaderboard();">
-        <i id="friendbutton" class="fas fa-chart-pie icon-large" style="margin-top:5px"></i>
+
+</div>
+
+<div id="connecting">
+    <div style="width: 350px; background-color: #FFFFFF; margin: 100px auto; border-radius: 15px; padding: 5px 15px 5px 15px;">
+        <h2>Connecting</h2>
+        <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the
+            connection.</p>
     </div>
-    <canvas id="leaderboardcanvas" width="180" height="240" style="">
+</div>
+<div class="btn canvasButtons toggle" id="togglelb" onclick="toggleleaderboard();">
+    <i class="fas fa-chart-pie icon-large" id="friendbutton" style="margin-top:5px"></i>
+</div>
+<canvas height="240" id="leaderboardcanvas" style="" width="180">
 
-    </canvas>
-    <canvas id="canvas" width="800" height="600"></canvas>
+</canvas>
+<canvas height="600" id="canvas" width="800"></canvas>
 
-    <input type="text" id="chat_textbox" placeholder="Press enter to chat" maxlength="200" />
-    <div style="font-family:'Ubuntu'">&nbsp;</div>
+<input id="chat_textbox" maxlength="200" placeholder="Press enter to chat" type="text"/>
+<div style="font-family:'Ubuntu'">&nbsp;</div>
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 </body>
 </html>

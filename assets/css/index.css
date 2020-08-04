@@ -70,6 +70,7 @@ body {
 #nick {
     width: 65%;
     float: left;
+    margin: inherit;
 }
 
 #gamemode {

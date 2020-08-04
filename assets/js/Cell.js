@@ -1,4 +1,4 @@
-import {colorToBytes, darkenColor, bytesToColor, PI_2, log, topics, pubsub} from "./utils";
+import {colorToBytes, darkenColor, bytesToColor, PI_2, sqDist, log, topics, pubsub} from "./utils";
 import textUtils from "./textcache";
 import settings from "./settings";
 import PointQuadTree from "./quadtree";
@@ -6,6 +6,7 @@ import PointQuadTree from "./quadtree";
 
 export default class Cell {
     static syncAppstamp = Date.now();
+    static cacheVirus = {};
     destroyed = false;
     id = 0;
     diedBy = 0;
@@ -27,6 +28,11 @@ export default class Cell {
     born = null;
     updated = null;
     dead = null; // timestamps
+    static quadtree;
+    QUADTREE_MAX_POINTS = 32;
+    CELL_POINTS_MIN = 5;
+    CELL_POINTS_MAX = 120;
+    VIRUS_POINTS = 100;
 
     constructor(id, x, y, s, name, color, skin, flags, syncUpdStamp) {
         this.id = id;
@@ -82,11 +88,25 @@ export default class Cell {
         } else this.name = value;
     }
 
-    updateNumPoints() {
+    static updateQuadtree(cells, cameraZ, cameraX, cameraY) {
+        var w = 1920 / cameraZ;
+        var h = 1080 / cameraZ;
+        var x = (cameraX - w / 2);
+        var y = (cameraY - h / 2);
+        this.quadtree = new PointQuadTree(x, y, w, h, this.QUADTREE_MAX_POINTS);
+        for (var i = 0; i < cells.list.length; ++i) {
+            var cell = cells.list[i];
+            for (var n = 0; n < cell.points.length; ++n) {
+                this.quadtree.insert(cell.points[n]);
+            }
+        }
+    }
+
+    updateNumPoints(cameraZ) {
         var numPoints = this.s * cameraZ | 0;
-        numPoints = Math.max(numPoints, CELL_POINTS_MIN);
-        numPoints = Math.min(numPoints, CELL_POINTS_MAX);
-        if (this.jagged) numPoints = VIRUS_POINTS;
+        numPoints = Math.max(numPoints, this.CELL_POINTS_MIN);
+        numPoints = Math.min(numPoints, this.CELL_POINTS_MAX);
+        if (this.jagged) numPoints = this.VIRUS_POINTS;
         while (this.points.length > numPoints) {
             var i = Math.random() * this.points.length | 0;
             this.points.splice(i, 1);
@@ -115,7 +135,31 @@ export default class Cell {
         }
     }
 
-    movePoints() {
+    setSkin(value) {
+        this.skin = (value && value[0] === "%" ? value.slice(1) : value) || this.skin;
+        if (this.skin === null || !knownSkins.hasOwnProperty(this.skin) || loadedSkins[this.skin])
+            return;
+        loadedSkins[this.skin] = new Image();
+        loadedSkins[this.skin].src = `${SKIN_URL}${this.skin}.png`;
+    }
+
+    setColor(value) {
+        if (!value) {
+            log.warn("got no color");
+            return;
+        }
+        this.color = value;
+        this.sColor = darkenColor(value);
+    }
+
+    draw(ctx, cells) {
+        ctx.save();
+        this.drawShape(ctx);
+        this.drawText(ctx, cells);
+        ctx.restore();
+    }
+
+    movePoints(border) {
         var pointsVel = this.pointsVel.slice();
         var len = this.points.length;
         for (var i = 0; i < len; ++i) {
@@ -131,7 +175,7 @@ export default class Cell {
             var prevRl = this.points[(i - 1 + len) % len].rl;
             var nextRl = this.points[(i + 1) % len].rl;
             var self = this;
-            var affected = quadtree.some({
+            var affected = Cell.quadtree.some({
                 x: curP.x - 5,
                 y: curP.y - 5,
                 w: 10,
@@ -163,48 +207,27 @@ export default class Cell {
         }
     }
 
-    setSkin(value) {
-        this.skin = (value && value[0] === "%" ? value.slice(1) : value) || this.skin;
-        if (this.skin === null || !knownSkins.hasOwnProperty(this.skin) || loadedSkins[this.skin])
-            return;
-        loadedSkins[this.skin] = new Image();
-        loadedSkins[this.skin].src = `${SKIN_URL}${this.skin}.png`;
-    }
-
-    setColor(value) {
-        if (!value) {
-            log.warn("got no color");
-            return;
-        }
-        this.color = value;
-        this.sColor = darkenColor(value);
-    }
-
-    draw(ctx, cells) {
-        ctx.save();
-        this.drawShape(ctx);
-        this.drawText(ctx, cells);
-        ctx.restore();
-    }
-
     drawShape(ctx) {
+
+
+        //todo First check if is minion using a bitmask, if so then draw minion
+
+
         ctx.fillStyle = this.color;
         /* Do not add stroke to pellets, they will performace */
         ctx.strokeStyle = this.sColor;
 
-        if (settings.fancyGraphics) {
-            ctx.lineWidth = Math.max(~~(this.s / 50), 10);
-        }
-
-        if (this.destroyed)
-            ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
-        else
-            ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
+        // if (this.destroyed)
+        //     ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
+        // else
+        //     ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
         if (!this.ejected && 20 < this.s)
             this.s -= ctx.lineWidth / 2 - 2;
 
+        settings.fancyGraphics = false;
         if (settings.fancyGraphics && this.points.length) {
+            ctx.lineWidth = Math.max(~~(this.s / 50), 10);
             ctx.beginPath();
             var point = this.points[0];
             ctx.moveTo(point.x, point.y);
@@ -216,12 +239,18 @@ export default class Cell {
             ctx.fill();
         } else if (this.jagged) {
             this.drawVirus(ctx, this.x, this.y, this.s, ctx.fillStyle, ctx.strokeStyle);
-        } else {
+
+        }
+            //   else if(this.isMinion){
+            //  this.drawMinions
+        //   }
+        else {
+            //How do I properly optimize this?
+            //I can optimize this
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.s, 0, PI_2, false);
             ctx.fill();
         }
-
         if (settings.showSkins && this.skin) {
             var skin = loadedSkins[this.skin];
             if (skin && skin.complete && skin.width && skin.height) {
@@ -241,22 +270,26 @@ export default class Cell {
             this.s += ctx.lineWidth / 2 - 2;
     }
 
+    drawText(ctx, cells) {
+        textUtils.firstdrawText(ctx, cells, this);
+    }
+
     drawVirus(mainCtx, x, y, s, fill, stroke) {
         var size = Math.ceil(s / 100) * 100;
         var hash = size + fill + stroke;
-        var virus = cacheVirus[hash];
+        var virus = Cell.cacheVirus[hash];
         if (!virus) {
             var canvas = document.createElement("canvas");
             canvas.width = canvas.height = 2 * size;
             var ctx = canvas.getContext("2d");
-            var incremental = PI_2 / VIRUS_POINTS;
+            var incremental = PI_2 / this.VIRUS_POINTS;
             ctx.fillStyle = fill;
             ctx.strokeStyle = stroke;
             ctx.lineJoin = "miter";
             ctx.lineWidth = size / 20;
             ctx.beginPath();
             ctx.moveTo(size, 2 * size - ctx.lineWidth);
-            for (var i = 1; i < VIRUS_POINTS; i++) {
+            for (var i = 1; i < this.VIRUS_POINTS; i++) {
                 var angle = i * incremental;
                 var dist = size - ctx.lineWidth - 6 + (i % 2 === 0) * 6;
                 ctx.lineTo(
@@ -268,16 +301,12 @@ export default class Cell {
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-            virus = cacheVirus[hash] = {
+            virus = Cell.cacheVirus[hash] = {
                 canvas: canvas,
-                accessTime: syncAppStamp,
+                accessTime: Cell.syncAppStamp,
                 size: size
             }
         }
         mainCtx.drawImage(virus.canvas, x - s, y - s, virus.canvas.width * s / virus.size, virus.canvas.height * s / virus.size);
-    }
-
-    drawText(ctx, cells) {
-        textUtils.firstdrawText(ctx, cells, this);
     }
 }

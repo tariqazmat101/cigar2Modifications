@@ -435,6 +435,22 @@ import SETTINGS from "./settings"
         wsSend(writer);
     }
 
+    function sendSkin(input) {
+        // Stop large urls from being sent
+        if (!isValidURL(input)) return;
+        if (input.toString().length > 100) return;
+        log.debug("skinurl trigger");
+        var writer = new Writer(true);
+        writer.setUint8(0x69);
+        writer.setStringUTF8(input);
+        wsSend(writer);
+    }
+
+    function isValidURL(string) {
+        var res = string.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+        return (res !== null)
+    }
+
     function sendChat(text) {
         var writer = new Writer();
         writer.setUint8(0x63);
@@ -533,7 +549,7 @@ import SETTINGS from "./settings"
 
     var settings = {
         mobile: "createTouch" in document,
-        showMass: false,
+        showMass: true,
         showNames: true,
         showLeaderboard: true,
         showChat: true,
@@ -542,7 +558,8 @@ import SETTINGS from "./settings"
         showSkins: true,
         showMinimap: true,
         darkTheme: false,
-        allowGETipSet: false
+        allowGETipSet: false,
+        showBorder: true,
     };
     var pressed = {
         space: false,
@@ -560,15 +577,17 @@ import SETTINGS from "./settings"
             wjQuery(".save").each(function () {
                 var id = wjQuery(this).data("box-id");
                 var value = wHandle.localStorage.getItem("checkbox-" + id);
-                if (value && value == "true" && 0 != id) {
+                if (value && value == "true" && 0 != id && 9 != id) {
                     wjQuery(this).prop("checked", "true");
                     wjQuery(this).trigger("change");
-                } else if (id == 0 && value != null)
+                } else if (id == 0 && value != null) {
+                    wjQuery(this).val(value);
+                } else if (id == 9 && value != null)
                     wjQuery(this).val(value);
             });
             wjQuery(".save").change(function () {
                 var id = wjQuery(this).data("box-id");
-                var value = (id == 0) ? wjQuery(this).val() : wjQuery(this).prop("checked");
+                var value = (id == 0 || id == 9) ? wjQuery(this).val() : wjQuery(this).prop("checked");
                 wHandle.localStorage.setItem("checkbox-" + id, value);
             });
         });
@@ -651,8 +670,12 @@ import SETTINGS from "./settings"
         }
     }
 
+    let previousMassdecay = 0;
+    let index = 0;
+
     function drawStats() {
         if (!stats.info) return stats.visible = false;
+        if (!stats.info) return;
         stats.visible = true;
 
         var canvas = stats.canvas;
@@ -663,7 +686,11 @@ import SETTINGS from "./settings"
             `${stats.info.playersTotal} / ${stats.info.playersLimit} players`,
             `${stats.info.playersAlive} playing`,
             `${stats.info.playersSpect} spectating`,
-            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(stats.info.uptime)}`
+            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(stats.info.uptime)}`,
+            `${(stats.info.mapFull)}% mapFull`,
+            `${cells.list.length} Particles `,
+            `${stats.info.massDecay.toFixed(3)} Mass Decay`,
+
         ];
         var width = 0;
         for (var i = 0; i < rows.length; i++)
@@ -673,8 +700,21 @@ import SETTINGS from "./settings"
         ctx.font = "14px Ubuntu";
         ctx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
         ctx.textBaseline = "top";
-        for (var i = 0; i < rows.length; i++)
+        let length = cells.list.length;
+        for (var i = 0; i < rows.length; i++) {
+            ctx.font = "14px Ubuntu";
+            //On the last row, check if current mass is bigger than the previous value, if yes, then make text green
+            //Other, check if previousmassdecay value is the same as current, if yes, make black
+            //else we assume it is decreasing, so make
+            if (i == rows.length - 2 && length > 500) {
+                let value = ~~(length / 100) - 5;
+                ctx.font = `${14 + value}px Ubuntu`;
+            }
+            if (i === rows.length - 1) stats.info.massDecay > previousMassdecay ? ctx.fillStyle = 'green' : previousMassdecay === stats.info.massDecay ? ctx.fillStyle = 'black' : ctx.fillStyle = 'red';
             ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
+        }
+        if (index % 3 == 0) previousMassdecay = stats.info.massDecay;
+        index++
     }
 
     function prettyPrintTime(seconds) {
@@ -750,6 +790,21 @@ import SETTINGS from "./settings"
                 lbctxt.fillText(text, textOffset, 70 + 24 * i);
             }
         }
+    }
+
+
+    function drawBorders(ctx) {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 20;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(border.left, border.top);
+        ctx.lineTo(border.right, border.top);
+        ctx.lineTo(border.right, border.bottom);
+        ctx.lineTo(border.left, border.bottom);
+        ctx.closePath();
+        ctx.stroke();
     }
 
     function drawGrid() {
@@ -847,17 +902,31 @@ import SETTINGS from "./settings"
         for (var i = 0, l = drawList.length; i < l; i++)
             drawList[i].update(syncAppStamp, cells);
         cameraUpdate();
-
+        if (SETTINGS.fancyGraphics) {
+            Cell.updateQuadtree(cells, cameraZ, cameraX, cameraY);
+            for (var i = 0, l = drawList.length; i < l; ++i) {
+                var cell = drawList[i];
+                cell.updateNumPoints(cameraZ);
+                cell.movePoints(border);
+            }
+        }
         mainCtx.save();
 
         mainCtx.fillStyle = settings.darkTheme ? "#111" : "#F2FBFF";
         mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+        // drawBorders(mainCtx);
         if (settings.showGrid) drawGrid();
+        //if(settings.showBorder) drawBorders(mainCtx);
 
         toCamera(mainCtx);
+        drawBorders(mainCtx);
 
+        let start = Date.now();
         for (var i = 0, l = drawList.length; i < l; i++)
             drawList[i].draw(mainCtx, cells);
+        let end = Date.now();
+
+        console.log(`Draw executation took ${end - start} ms with ${cells.list.length} cells `);
 
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
@@ -1111,11 +1180,12 @@ import SETTINGS from "./settings"
     };
     wHandle.setMinimap = function (a) {
         settings.showMinimap = !a;
+
     };
     wHandle.spectate = function (a) {
         wsSend(UINT8_CACHE[1]);
         //todo emit that we are in spectatemode, so stats can upadte it's maxscore to 0;
-        stats.maxScore = 0;
+        pubsub.publish(topics.spectateView);
         hideESCOverlay();
     };
     wHandle.toggleleaderboard = function () {
@@ -1124,8 +1194,9 @@ import SETTINGS from "./settings"
         wsSend(UINT8_CACHE[69]);
         console.log("I am printed");
     };
-    wHandle.play = function (a) {
+    wHandle.play = function (a, b) {
         sendPlay(a);
+        sendSkin(b);
         hideESCOverlay();
     };
     wHandle.onload = init;

@@ -4,7 +4,7 @@ let settings = {
     mobile: "createTouch" in document,
     showMass: false,
     showLeaderboard: true,
-    fancyGraphics: true,
+    fancyGraphics: false,
     showChat: true,
     showGrid: true,
     showColor: true,

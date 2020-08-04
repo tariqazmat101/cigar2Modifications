@@ -16,6 +16,10 @@ export const colorToBytes = (color) => {
     throw new Error(`invalid color ${color}`);
 };
 
+export const sqDist = (a, b) => {
+    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+};
+
 export const bytesToColor = (r, g, b) => {
     var r1 = ("00" + (~~r).toString(16)).slice(-2);
     var g1 = ("00" + (~~g).toString(16)).slice(-2);
@@ -47,14 +51,26 @@ export const log = {
         console.debug(a);
     }
 };
-
+export const UINT8_CACHE = {
+    1: new Uint8Array([1]),
+    17: new Uint8Array([17]),
+    21: new Uint8Array([21]),
+    18: new Uint8Array([18]),
+    19: new Uint8Array([19]),
+    22: new Uint8Array([22]),
+    23: new Uint8Array([23]),
+    24: new Uint8Array([24]),
+    69: new Uint8Array([69]), // This is a new packetcode that will be sent to the server, it tells the server to change leaderboards
+    254: new Uint8Array([254])
+};
 export const topics = {
     //miscelneeiosu topics
     syncUpdateStamp: "SyncUpdateSTamp",
     syncAPPstamp: "syncAPPstamp",
     showEscapeoverlay: "showescape",
     textCacheCleanup: "textcachecleanup",
-
+    spectateView: "spectateView",
+    wsSend: "wsSend",
 
     //topics for settings
     showLeaderboard: "showLeaderboard",
