@@ -7,7 +7,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-    //devtool: "source-map",
+    devtool: "source-map",
     entry: {
         index_head: './assets/js/main_out.js',
     },
@@ -33,6 +33,7 @@ module.exports = {
                         presets: ['@babel/preset-env',
                             {
                                 "plugins":[
+                                //I believe this is to allow private class properties (ex, see Cell.js)
                                 "@babel/plugin-proposal-class-properties"
                                     ]
 
@@ -69,19 +70,19 @@ module.exports = {
             }
             ,
 
-            {
-                test: /\.js$/,
-                exclude: [
-                    path.resolve(__dirname, 'node_modules')
-                ],
-                enforce: 'post',
-                use: {
-                    loader: WebpackObfuscator.loader,
-                    options: {
-                        rotateStringArray: true
-                    }
-                }
-            }
+            // {
+            //     test: /\.js$/,
+            //     exclude: [
+            //         path.resolve(__dirname, 'node_modules')
+            //     ],
+            //     enforce: 'post',
+            //     use: {
+            //         loader: WebpackObfuscator.loader,
+            //         options: {
+            //             rotateStringArray: true
+            //         }
+            //     }
+            // }
         ]
     },
     devServer: {

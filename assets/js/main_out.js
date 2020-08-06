@@ -11,6 +11,9 @@ import {pubsub, topics} from "./utils";
 import textUtils from "./textcache";
 import SETTINGS from "./settings"
 
+import stats from "./canvasComponets /stats.js";
+
+
 
 (function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
@@ -400,7 +403,10 @@ import SETTINGS from "./settings"
             case 0xFE: // server stat
                 stats.info = JSON.parse(reader.getStringUTF8());
                 stats.latency = syncUpdStamp - stats.pingLoopStamp;
-                drawStats();
+               // drawStats();
+                stats.drawBottomStats();
+
+
                 break;
             default:
                 // invalid packet
@@ -507,18 +513,18 @@ import SETTINGS from "./settings"
         canvas: document.createElement("canvas"),
         visible: false,
     });
-    var stats = Object.create({
-        framesPerSecond: 0,
-        latency: NaN,
-        supports: null,
-        info: null,
-        pingLoopId: NaN,
-        pingLoopStamp: null,
-        canvas: document.createElement("canvas"),
-        visible: false,
-        score: NaN,
-        maxScore: 0
-    });
+    // var stats = Object.create({
+    //     framesPerSecond: 0,
+    //     latency: NaN,
+    //     supports: null,
+    //     info: null,
+    //     pingLoopId: NaN,
+    //     pingLoopStamp: null,
+    //     canvas: document.createElement("canvas"),
+    //     visible: false,
+    //     score: NaN,
+    //     maxScore: 0
+    // });
 
     var ws = null;
     var wsUrl = null;
@@ -931,22 +937,8 @@ import SETTINGS from "./settings"
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
 
-        var height = 2;
-        mainCtx.fillStyle = settings.darkTheme ? "#FFF" : "#000";
-        mainCtx.textBaseline = "top";
-
-        //todo why is Statsstuff being drawn here?
-        if (!isNaN(stats.score)) {
-            mainCtx.font = "30px Ubuntu";
-            mainCtx.fillText(`Score: ${stats.score}`, 2, height);
-            height += 30;
-        }
-        mainCtx.font = "20px Ubuntu";
-        var gameStatsText = `${~~stats.framesPerSecond} FPS`;
-        if (!isNaN(stats.latency)) gameStatsText += ` ${stats.latency}ms ping`;
-        mainCtx.fillText(gameStatsText, 2, height);
-        height += 24;
-
+        stats.drawTopstats(mainCtx);
+        let height = 2;
         if (stats.visible)
             mainCtx.drawImage(stats.canvas, 2, height);
         if (leaderboard.visible)
@@ -1159,7 +1151,8 @@ import SETTINGS from "./settings"
     };
     wHandle.setDarkTheme = function (a) {
         settings.darkTheme = a;
-        drawStats();
+        //stats.drawStats();
+        stats.drawBottomStats();
     };
     wHandle.setShowMass = function (a) {
         settings.showMass = a;
