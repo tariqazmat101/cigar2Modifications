@@ -9,12 +9,11 @@ import Cell from "./Cell"
 import css from "../css/index.css"
 import {pubsub, topics} from "./utils";
 import textUtils from "./textcache";
-import SETTINGS from "./settings"
+import SETTINGS from "./settings";
 
-import stats from "./canvasComponets /stats.js";
+import statsInterface from "./canvasComponets /stats"
 
-
-
+//hello
 (function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
         console.log(`${msg} is gay and ${data}`);
@@ -341,10 +340,10 @@ import stats from "./canvasComponets /stats.js";
                     cameraZ = targetZ = 1;
                 }
                 reader.getUint32(); // game type
-                if (!/MultiOgar|OgarII/.test(reader.getStringUTF8()) || stats.pingLoopId) break;
-                stats.pingLoopId = setInterval(function () {
+                if (!/MultiOgar|OgarII/.test(reader.getStringUTF8()) || statsInterface.pingLoopId) break;
+                statsInterface.pingloopid = setInterval(function () {
                     wsSend(UINT8_CACHE[254]);
-                    stats.pingLoopStamp = Date.now();
+                    statsInterface.pingLoopStamp = Date.now();
                 }, 2000);
                 break;
             case 0x45:
@@ -401,11 +400,8 @@ import stats from "./canvasComponets /stats.js";
                 drawChat();
                 break;
             case 0xFE: // server stat
-                stats.info = JSON.parse(reader.getStringUTF8());
-                stats.latency = syncUpdStamp - stats.pingLoopStamp;
-               // drawStats();
-                stats.drawBottomStats();
-
+                let info = JSON.parse(reader.getStringUTF8()), latency = syncUpdStamp - statsInterface.pingLoopStamp;
+                statsInterface.updateFromServer(latency, info, cells.length);
 
                 break;
             default:
@@ -471,7 +467,9 @@ import stats from "./canvasComponets /stats.js";
         cleanupObject(leaderboard);
         cleanupObject(chat);
         //todo emit gamereset so that everything can be cleaned up;
-        cleanupObject(stats);
+        //cleanupObject(x);
+
+
         chat.messages = [];
         leaderboard.items = [];
         cells.mine = [];
@@ -513,7 +511,7 @@ import stats from "./canvasComponets /stats.js";
         canvas: document.createElement("canvas"),
         visible: false,
     });
-    // var stats = Object.create({
+    // var statsComponent = Object.create({
     //     framesPerSecond: 0,
     //     latency: NaN,
     //     supports: null,
@@ -679,49 +677,6 @@ import stats from "./canvasComponets /stats.js";
     let previousMassdecay = 0;
     let index = 0;
 
-    function drawStats() {
-        if (!stats.info) return stats.visible = false;
-        if (!stats.info) return;
-        stats.visible = true;
-
-        var canvas = stats.canvas;
-        var ctx = canvas.getContext("2d");
-        ctx.font = "14px Ubuntu";
-        var rows = [
-            `${stats.info.name} (${stats.info.mode})`,
-            `${stats.info.playersTotal} / ${stats.info.playersLimit} players`,
-            `${stats.info.playersAlive} playing`,
-            `${stats.info.playersSpect} spectating`,
-            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(stats.info.uptime)}`,
-            `${(stats.info.mapFull)}% mapFull`,
-            `${cells.list.length} Particles `,
-            `${stats.info.massDecay.toFixed(3)} Mass Decay`,
-
-        ];
-        var width = 0;
-        for (var i = 0; i < rows.length; i++)
-            width = Math.max(width, 2 + ctx.measureText(rows[i]).width + 2);
-        canvas.width = width;
-        canvas.height = rows.length * (14 + 2);
-        ctx.font = "14px Ubuntu";
-        ctx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
-        ctx.textBaseline = "top";
-        let length = cells.list.length;
-        for (var i = 0; i < rows.length; i++) {
-            ctx.font = "14px Ubuntu";
-            //On the last row, check if current mass is bigger than the previous value, if yes, then make text green
-            //Other, check if previousmassdecay value is the same as current, if yes, make black
-            //else we assume it is decreasing, so make
-            if (i == rows.length - 2 && length > 500) {
-                let value = ~~(length / 100) - 5;
-                ctx.font = `${14 + value}px Ubuntu`;
-            }
-            if (i === rows.length - 1) stats.info.massDecay > previousMassdecay ? ctx.fillStyle = 'green' : previousMassdecay === stats.info.massDecay ? ctx.fillStyle = 'black' : ctx.fillStyle = 'red';
-            ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
-        }
-        if (index % 3 == 0) previousMassdecay = stats.info.massDecay;
-        index++
-    }
 
     function prettyPrintTime(seconds) {
         seconds = ~~seconds;
@@ -898,7 +853,8 @@ import stats from "./canvasComponets /stats.js";
 
     function drawGame() {
         //todo why is Statsstuff being updated here?
-        stats.framesPerSecond += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.framesPerSecond) / 10;
+        //Frame is being updated
+        pubsub.publish(topics.updateFPS);
         syncAppStamp = Date.now();
 
         //emit appStamp
@@ -936,11 +892,8 @@ import stats from "./canvasComponets /stats.js";
 
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
+        statsInterface.renderStats(mainCtx);
 
-        stats.drawTopstats(mainCtx);
-        let height = 2;
-        if (stats.visible)
-            mainCtx.drawImage(stats.canvas, 2, height);
         if (leaderboard.visible)
             // mainCtx.drawImage(
             //     leaderboard.canvas,
@@ -988,11 +941,11 @@ import stats from "./canvasComponets /stats.js";
             targetZ = Math.pow(Math.min(64 / s, 1), .4);
             cameraX += (targetX - cameraX) / 2;
             cameraY += (targetY - cameraY) / 2;
-            stats.score = score;
-            stats.maxScore = Math.max(stats.maxScore, score);
+            //todo make a camera update (publish camera update, with a score)
+            statsInterface.updateScore(score);
         } else {
-            stats.score = NaN;
-            stats.maxScore = 0;
+            // x.score = NaN;
+            // x.maxScore = 0;
             cameraX += (targetX - cameraX) / 9;
             cameraY += (targetY - cameraY) / 9;
         }
@@ -1006,8 +959,9 @@ import stats from "./canvasComponets /stats.js";
         chatBox = document.getElementById("chat_textbox");
         mainCanvas.focus();
 
-        textUtils.init();
         SETTINGS.init();
+        textUtils.init();
+        statsInterface.init();
 
 
         //load critical images
@@ -1152,7 +1106,7 @@ import stats from "./canvasComponets /stats.js";
     wHandle.setDarkTheme = function (a) {
         settings.darkTheme = a;
         //stats.drawStats();
-        stats.drawBottomStats();
+        x.y();
     };
     wHandle.setShowMass = function (a) {
         settings.showMass = a;
@@ -1177,7 +1131,7 @@ import stats from "./canvasComponets /stats.js";
     };
     wHandle.spectate = function (a) {
         wsSend(UINT8_CACHE[1]);
-        //todo emit that we are in spectatemode, so stats can upadte it's maxscore to 0;
+        //todo emit that we are in spectatemode, so statscan upadte it's maxscore to 0;
         pubsub.publish(topics.spectateView);
         hideESCOverlay();
     };

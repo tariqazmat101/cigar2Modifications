@@ -51,6 +51,18 @@ export const log = {
         console.debug(a);
     }
 };
+
+export const prettyPrintTime = (seconds) => {
+    seconds = ~~seconds;
+    var minutes = ~~(seconds / 60);
+    if (minutes < 1) return "<1 min";
+    var hours = ~~(minutes / 60);
+    if (hours < 1) return minutes + "min";
+    var days = ~~(hours / 24);
+    if (days < 1) return hours + "h";
+    return days + "d";
+};
+
 export const UINT8_CACHE = {
     1: new Uint8Array([1]),
     17: new Uint8Array([17]),
@@ -71,6 +83,7 @@ export const topics = {
     textCacheCleanup: "textcachecleanup",
     spectateView: "spectateView",
     wsSend: "wsSend",
+    updateFPS: "updateFPS",
 
     //topics for settings
     showLeaderboard: "showLeaderboard",
