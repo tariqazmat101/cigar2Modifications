@@ -22,8 +22,16 @@ module.exports = {
     optimization: {
         minimize: false
     },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js']
+    },
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
@@ -32,14 +40,14 @@ module.exports = {
                     options: {
                         presets: ['@babel/preset-env',
                             {
-                                "plugins":[
-                                //I believe this is to allow private class properties (ex, see Cell.js)
-                                "@babel/plugin-proposal-class-properties"
-                                    ]
+                                "plugins": [
+                                    //I believe this is to allow private class properties (ex, see Cell.js)
+                                    "@babel/plugin-proposal-class-properties"
+                                ]
 
                             }
 
-                            ]
+                        ]
                     }
                 }
             },
