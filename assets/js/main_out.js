@@ -12,6 +12,7 @@ import textUtils from "./textcache";
 import SETTINGS from "./settings";
 
 import statsInterface from "./canvasComponets /stats"
+import replayer from "./replayer"
 
 //hello
 (function (wHandle, wjQuery) {
@@ -103,11 +104,6 @@ import statsInterface from "./canvasComponets /stats"
                 b: parseInt(color[5] + color[6], 16)
             };
         throw new Error(`invalid color ${color}`);
-    }
-
-    function darkenColor(color) {
-        var a = colorToBytes(color);
-        return bytesToColor(a.r * .9, a.g * .9, a.b * .9);
     }
 
     function cleanupObject(object) {
@@ -209,6 +205,7 @@ import statsInterface from "./canvasComponets /stats"
     }
 
     function wsMessage(data) {
+        //   console.log(replayer);
         syncUpdStamp = Date.now();
         var reader = new Reader(new DataView(data.data), 0, true);
         var packetId = reader.getUint8();
@@ -953,6 +950,7 @@ import statsInterface from "./canvasComponets /stats"
         cameraZInvd = 1 / cameraZ;
     }
 
+    var replayer;
     function init() {
         mainCanvas = document.getElementById("canvas");
         mainCtx = mainCanvas.getContext("2d");
@@ -964,6 +962,7 @@ import statsInterface from "./canvasComponets /stats"
         statsInterface.init();
 
 
+        replayer = new replayer();
         //load critical images
         syncLoadImages();
 
