@@ -77,6 +77,12 @@ const chatInterface = {
         pubsub.subscribe(topics.syncAPPstamp, function (msg, data) {
             //statState.SyncAppStamp = data;
         });
+        //If theme changes, like from light to dark, the chat did not correctly switch colors
+        //now it does.
+        pubsub.subscribe(topics.theme, function () {
+            //statState.SyncAppStamp = data;
+            this.updateChat();
+        });
 
         pubsub.subscribe(topics.updateFPS, function () {
             statState.framesPerSecond += (1000 / Math.max(Date.now() - statState.SyncAppStamp, 1) - statState.framesPerSecond) / 10;

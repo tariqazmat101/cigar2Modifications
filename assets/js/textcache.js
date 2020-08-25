@@ -49,6 +49,7 @@ let textUtils = {
         ctx.strokeStyle = "#000";
         (ctx.lineWidth !== 1) && ctx.strokeText(text, x, y);
         ctx.fillText(text, x, y);
+        //helloworld faggot
         ctx.restore();
     },
     newNameCache: function (value, size) {

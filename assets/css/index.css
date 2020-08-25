@@ -9,14 +9,13 @@ body {
 /* IDs */
 
 #overlays {
-    display:none; 
+    display: none;
     position: absolute;
-    left: 0; 
-    right: 0; 
-    top: 0; 
-    bottom: 0; 
-    background-color: 
-    rgba(0,0,0,0.5); 
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 200;
 }
 
@@ -57,14 +56,14 @@ body {
 }
 
 #connecting {
-    display:none;
-    position: absolute; 
-    left: 0; 
-    right: 0; 
-    top: 0; 
-    bottom: 0; 
-    z-index: 100; 
-    background-color: rgba(0,0,0,0.5);
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 #nick {
@@ -122,12 +121,18 @@ body {
 }
 
 #play-btn {
+    width: 100%;
+    float: left;
+    margin-top: 2px;
+}
+
+#replayer-button {
     width: 85%;
     float: left;
 }
 
 #settings-btn {
-    width: 13%;
+    width: 14%;
     float: right;
 }
 
@@ -182,11 +187,105 @@ body {
     display: table;
     margin: 0 auto;
 }
-.textlegal{
+
+.textlegal {
     color: #aac7e4;
 }
 
+.wrapper {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background-color: #9c9c9c
+
+}
+
+.replay-container {
+    overflow: auto;
+    padding: 15px;
+    display: block;
+}
+
+.replays {
+    display: grid;
+    grid-gap: 15px;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    width: 702px;
+    height: 100%;
+}
+
+.replay-item {
+    position: relative;
+    box-shadow: 2px 2px 5px 1px #000;
+    border: 1px solid #000;
+    overflow: hidden;
+}
+
+.replay-thumbnail {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    user-select: none;
+
+}
+
+.replay-container {
+    position: sticky;
+    height: 100%;
+    z-index: 1;
+    width: 100%;
+    padding: 5px;
+}
+
+.replay-exit {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    text-align: center;
+    width: 50px;
+    font-size: 15px;
+    padding-top: 3px;
+    background: #ff0000;
+    border-radius: 0px 0px 2px 2px;
+    cursor: pointer;
+    z-index: 1;
+    border: 3px solid #111;
+    border-top: 0px;
+    padding-bottom: 1px;
+}
+
+
+#replay-modal {
+    width: 750px;
+    height: 500px;
+    background-color: red;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+.generic-button {
+    margin: 7px;
+
+
+}
+
+
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

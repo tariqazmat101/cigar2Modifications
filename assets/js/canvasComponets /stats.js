@@ -38,7 +38,7 @@ const statsInterface = {
     },
 
     drawBottomStats: function (cellsLength) {
-        console.log("statState have been draw");
+        //console.log("statState have been draw");
         if (!statState.info) return statState.visible = false;
         if (!statState.info) return;
         statState.visible = true;
@@ -54,7 +54,8 @@ const statsInterface = {
             `${(statState.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(statState.info.uptime)}`,
             `${(statState.info.mapFull)}% mapFull`,
             `${cellsLength} Particles `,
-            `${statState.info.massDecay.toFixed(3)} Mass Decay`,
+            //`${statState.info.massDecay.toFixed(3)} Mass Decay`,
+            `40 Mass Decay`,
 
         ];
         var width = 0;
@@ -75,11 +76,11 @@ const statsInterface = {
                 let value = ~~(length / 100) - 5;
                 ctx.font = `${14 + value}px Ubuntu`;
             }
-            if (i === rows.length - 1) statState.info.massDecay > previousMassdecay ? ctx.fillStyle = 'green' : previousMassdecay === statState.info.massDecay ? ctx.fillStyle = 'black' : ctx.fillStyle = 'red';
+            //    if (i === rows.length - 1) statState.info.massDecay > previousMassdecay ? ctx.fillStyle = 'green' : previousMassdecay === statState.info.massDecay ? ctx.fillStyle = 'black' : ctx.fillStyle = 'red';
             ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
         }
-        if (index % 3 === 0) statState.previousMassdecay = statState.info.massDecay;
-        index++
+        //   if (index % 3 === 0) statState.previousMassdecay = statState.info.massDecay;
+        // index++
     },
 
     checkIfvisible: function () {

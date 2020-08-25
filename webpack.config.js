@@ -17,7 +17,7 @@ module.exports = {
         //publicPath: "/dist/"
     },
     watchOptions: {
-        poll: 1000
+        poll: 500
     },
     optimization: {
         minimize: false
@@ -28,7 +28,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },

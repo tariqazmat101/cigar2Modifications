@@ -6,19 +6,22 @@ import snake from "../img/fire.png"
 import fire from "../img/snake.png"
 import Cell from "./Cell"
 
-import css from "../css/index.css"
+import css from "../css/index.css";
+import 'izitoast/dist/css/iziToast.min.css';
 import {pubsub, topics} from "./utils";
 import textUtils from "./textcache";
 import SETTINGS from "./settings";
 
 import statsInterface from "./canvasComponets /stats"
-import replayer from "./replayer"
+import Recorder from "./Recorder.ts"
 
-//hello
+import iziToast from "izitoast";
+//hello askajs
 (function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
-        console.log(`${msg} is gay and ${data}`);
+        //console.log(`${msg} is gay and ${data}`);
     };
+    let replay = new Recorder();
 
     //why don't we add (); to mySubscriber function call? we are invoking it,right??
     var token = pubsub.subscribe('x', mySubscriber);
@@ -156,7 +159,7 @@ import replayer from "./replayer"
         log.debug("ws cleanup trigger");
         ws.onopen = null;
         ws.onmessage = null;
-        ws.close();
+        //  ws.close();
         ws = null;
     }
 
@@ -187,11 +190,14 @@ import replayer from "./replayer"
         log.warn(error);
     }
 
+    let wsInterval;
+
     function wsClose(e) {
         log.debug(`ws disconnected ${e.code} '${e.reason}'`);
         wsCleanup();
         gameReset();
-        setTimeout(function () {
+        if (e.code == 69) return;
+        wsInterval = setTimeout(function () {
             if (ws && ws.readyState === 1) return;
             wsInit(wsUrl);
         }, disconnectDelay *= 1.5);
@@ -204,13 +210,35 @@ import replayer from "./replayer"
         else ws.send(data);
     }
 
+    let previousstamp;
+    let previousUpdateNode;
+    let time;
+
+    let replayRunning = false;
+
     function wsMessage(data) {
-        //   console.log(replayer);
+        previousstamp = syncUpdStamp;
         syncUpdStamp = Date.now();
-        var reader = new Reader(new DataView(data.data), 0, true);
-        var packetId = reader.getUint8();
+
+        //console.log(`WsMessage is invoked ${syncUpdStamp - previousstamp}`);
+
+        if (replayRunning) data.data = data;
+        const reader = new Reader(new DataView(data.data), 0, true);
+        const packetId = reader.getUint8();
+        if (!replayRunning) replay.addMessagetoBuffer({
+                packetId: packetId,
+                length: data.data.byteLength,
+                payload: data.data
+            }
+            , cells, cells);
         switch (packetId) {
             case 0x10: // update nodes
+                //if(replayRunning)
+                previousUpdateNode = time;
+                time = !replayRunning ? Date.now() : previousUpdateNode + 40;
+
+                //       console.log(`UpdateNode is invoked ${time -previousUpdateNode}`);
+
                 var killer, killed, id, node, x, y, s, flags, cell,
                     updColor, updName, updSkin, count, color, name, skin;
 
@@ -357,7 +385,7 @@ import replayer from "./replayer"
                 drawLeaderboard();
                 break;
             case 0x46:
-                console.log("Minimap packet has arrived");
+                //console.log("Minimap packet has arrived");
                 minimapNodes.nodes = [];
                 count = reader.getUint16();
                 for (let i = 0; i < count; i++) {
@@ -858,8 +886,15 @@ import replayer from "./replayer"
         pubsub.publish(topics.syncAPPstamp, syncAppStamp);
 
         var drawList = cells.list.slice(0).sort(cellSort);
-        for (var i = 0, l = drawList.length; i < l; i++)
-            drawList[i].update(syncAppStamp, cells);
+        for (var i = 0, l = drawList.length; i < l; i++) {
+
+            if (drawList[i] === undefined) {
+                console.log("hi");
+            } else {
+                drawList[i].update(syncAppStamp, cells);
+            }
+
+        }
         cameraUpdate();
         if (SETTINGS.fancyGraphics) {
             Cell.updateQuadtree(cells, cameraZ, cameraX, cameraY);
@@ -885,7 +920,7 @@ import replayer from "./replayer"
             drawList[i].draw(mainCtx, cells);
         let end = Date.now();
 
-        console.log(`Draw executation took ${end - start} ms with ${cells.list.length} cells `);
+        //console.log(`Draw executation took ${end - start} ms with ${cells.list.length} cells `);
 
         fromCamera(mainCtx);
         mainCtx.scale(viewMult, viewMult);
@@ -908,8 +943,11 @@ import replayer from "./replayer"
         drawMinimap();
 
         mainCtx.restore();
+        //What is this even doing? and why is it even here?
         pubsub.publish(topics.textCacheCleanup);
-        wHandle.requestAnimationFrame(drawGame);
+
+        if (messageFrame) render();
+        else wHandle.requestAnimationFrame(drawGame);
     }
 
     function cellSort(a, b) {
@@ -950,7 +988,64 @@ import replayer from "./replayer"
         cameraZInvd = 1 / cameraZ;
     }
 
-    var replayer;
+    let messages = undefined;
+
+    function replayEventListeners() {
+        var thumbnails = document.querySelectorAll('.replay-thumbnail');
+        for (var i = 0; i < thumbnails.length; i++) {
+            thumbnails[i].addEventListener('click', ((j) => {
+                return function () {
+                    alert(j);
+                    wsClose({code: 69, reason: "replay preview is executing please"});
+                    //important
+                    messages = Recorder.clips[0];
+
+                    //Put the canvas element at the top
+                    mainCanvas.style.zIndex = "2000";
+                    cells.mine = messages.buffer[0].cells.mine;
+                    cells.list = messages.buffer[0].cells.list;
+                    cells.byId = messages.buffer[0].cells.byId;
+
+                    border.left = -7071;
+                    border.top = -7071;
+                    border.right = 7071;
+                    border.bottom = 7071;
+                    border.width = border.right - border.left;
+                    border.height = border.bottom - border.top;
+                    border.centerX = (border.left + border.right) / 2;
+                    border.centerY = (border.top + border.bottom) / 2;
+                    if (!mapCenterSet) {
+                        mapCenterSet = true;
+                        cameraX = targetX = border.centerX;
+                        cameraY = targetY = border.centerY;
+                        cameraZ = targetZ = 1;
+                    }
+
+                    render();
+                }
+            })(i))
+        }
+    }
+
+    var messageFrame = 0;
+
+    function render() {
+        replayRunning = true;
+        if (messageFrame === messages.buffer.length - 1) {
+            messageFrame = 0;
+            //throw new Error('Recorder has rendered');
+        }
+        setTimeout(function () {
+            // rest of code here
+            wsMessage(messages.buffer[messageFrame].payload);
+        }, 100 * messageFrame);
+
+        messageFrame++;
+        wHandle.requestAnimationFrame(drawGame);
+        // capturer.capture(mainCanvas);
+    }
+
+    //var replayer;
     function init() {
         mainCanvas = document.getElementById("canvas");
         mainCtx = mainCanvas.getContext("2d");
@@ -962,7 +1057,7 @@ import replayer from "./replayer"
         statsInterface.init();
 
 
-        replayer = new replayer();
+        //replayer = new replayer();
         //load critical images
         syncLoadImages();
 
@@ -1047,7 +1142,17 @@ import replayer from "./replayer"
                     pressed.e = false;
                     break;
                 case 82: // R
+                    if (isTyping || escOverlayShown) break;
                     pressed.r = false;
+                    pubsub.publish();
+                    console.log("R key has been pressed");
+
+                    let x = iziToast.success({
+                        title: 'OK',
+                        message: 'Successfully inserted record!',
+                    });
+                    replay.addtoClips(mainCanvas);
+                    replayEventListeners();
                     break;
                 case 84: // T
                     pressed.t = false;
@@ -1104,8 +1209,10 @@ import replayer from "./replayer"
     };
     wHandle.setDarkTheme = function (a) {
         settings.darkTheme = a;
+        pubsub.publish(topics.theme);
         //stats.drawStats();
-        x.y();
+        //todo fix later x.y();
+        //x.y();
     };
     wHandle.setShowMass = function (a) {
         settings.showMass = a;
@@ -1140,6 +1247,21 @@ import replayer from "./replayer"
         wsSend(UINT8_CACHE[69]);
         console.log("I am printed");
     };
+    wHandle.toggleReplayMenu = function () {
+        let elem = document.getElementById("replay-modal");
+        // If the element is visible, hide it
+        if (wHandle.getComputedStyle(elem).display === 'block') {
+            wjQuery(elem).hide();
+            return;
+        }
+        // Otherwise, show it
+        wjQuery(elem).show();
+
+    };
+    wHandle;
+    // wHandle.closeReplayWindow() = function() {
+    //
+    // }
     wHandle.play = function (a, b) {
         sendPlay(a);
         sendSkin(b);

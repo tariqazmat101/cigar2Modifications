@@ -89,9 +89,12 @@ export const topics = {
     showLeaderboard: "showLeaderboard",
     showGrid: "showGrid",
     showMinimap: "showminimap",
-    darkTheme: "darktheme",
+    theme: "theme",
     showMass: "showMass",
     showSkins: "showSkins",
+
+    //User interfaces
+
 };
 
 export let pubsub = x;
