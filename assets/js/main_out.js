@@ -946,7 +946,7 @@ import iziToast from "izitoast";
         //What is this even doing? and why is it even here?
         pubsub.publish(topics.textCacheCleanup);
 
-        if (messageFrame) render();
+        if (messageFrame) render(packets);
         else wHandle.requestAnimationFrame(drawGame);
     }
 
@@ -988,7 +988,7 @@ import iziToast from "izitoast";
         cameraZInvd = 1 / cameraZ;
     }
 
-    let messages = undefined;
+    let packets = undefined;
 
     function replayEventListeners() {
         var thumbnails = document.querySelectorAll('.replay-thumbnail');
@@ -998,13 +998,13 @@ import iziToast from "izitoast";
                     alert(j);
                     wsClose({code: 69, reason: "replay preview is executing please"});
                     //important
-                    messages = Recorder.clips[0];
+                    packets = Recorder.clips[0];
 
                     //Put the canvas element at the top
                     mainCanvas.style.zIndex = "2000";
-                    cells.mine = messages.buffer[0].cells.mine;
-                    cells.list = messages.buffer[0].cells.list;
-                    cells.byId = messages.buffer[0].cells.byId;
+                    cells.mine = packets.buffer[0].cells.mine;
+                    cells.list = packets.buffer[0].cells.list;
+                    cells.byId = packets.buffer[0].cells.byId;
 
                     border.left = -7071;
                     border.top = -7071;
@@ -1021,7 +1021,7 @@ import iziToast from "izitoast";
                         cameraZ = targetZ = 1;
                     }
 
-                    render();
+                    initiateRender(packets)
                 }
             })(i))
         }
@@ -1029,15 +1029,22 @@ import iziToast from "izitoast";
 
     var messageFrame = 0;
 
-    function render() {
+    function initiateRender(packets) {
         replayRunning = true;
-        if (messageFrame === messages.buffer.length - 1) {
+        render(packets);
+
+
+    }
+
+    function render(packets) {
+        if (!replayRunning) return;
+        if (messageFrame === packets.buffer.length - 1) {
             messageFrame = 0;
             //throw new Error('Recorder has rendered');
         }
         setTimeout(function () {
             // rest of code here
-            wsMessage(messages.buffer[messageFrame].payload);
+            wsMessage(packets.buffer[messageFrame].payload);
         }, 100 * messageFrame);
 
         messageFrame++;
@@ -1121,7 +1128,14 @@ import iziToast from "izitoast";
                 case 27: // esc
                     if (pressed.esc) break;
                     pressed.esc = true;
-                    if (escOverlayShown) hideESCOverlay();
+                    //Added to escape from the replay when it's running
+
+                    if (replayRunning) {
+                        replayRunning = !replayRunning;
+                        mainCanvas.style.zIndex = "-2000";
+                        gameReset();
+                        setserver();
+                    } else if (escOverlayShown) hideESCOverlay();
                     else showESCOverlay();
                     break;
             }
