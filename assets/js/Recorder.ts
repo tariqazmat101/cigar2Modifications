@@ -5,7 +5,20 @@ import _ from "lodash"
 const MAXLISTLENGTH = 2000;
 const DRAWPACKET = 0x10;
 
+/**
+ * This is the class for the Replay Recorder. It contains
+ * Each ReplayClip holds an array of dataFrames.
+ * Each dataFrame is mapped to a websocket message.
+ */
+
+
 //todo enforce this as a singleton class
+/**
+ * dataFrame object represents a single websocket message.
+ * It contains the packetId of that message, the data within that message, and it's length.
+ *
+ * An optional property called 'Cells' is only added to transform the dataFrame into a keyFrame.
+ */
 interface dataFrame extends Object {
     length: number;
     payload: ArrayBuffer;
@@ -106,8 +119,8 @@ export default class Recorder {
     //Key frames which have the cells, deep copied, and whatnot
     addMessagetoBuffer(message: dataFrame, cells: any): void {
         if (message.packetId == DRAWPACKET) {
-            // this.drawMessageCount++ ;
-            if (++this.drawMessageCount === 80) {
+            this.drawMessageCount++;
+            if (this.drawMessageCount === 80) {
                 this.drawMessageCount = 0;
                 console.log(`message count is $${this.drawMessageCount}`);
                 message.cells = _.cloneDeep(cells);

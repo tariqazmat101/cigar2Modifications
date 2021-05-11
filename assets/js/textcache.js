@@ -95,7 +95,7 @@ let textUtils = {
         ctx.restore();
     },
     firstdrawText: function (ctx, cells, that) {
-        if (that.s < 60 || that.jagged) return;
+        if (that.jagged) return;
         //If it's one of my cells or, if I have no cells (spectating), then enter this loop
         if ((cells.mine.indexOf(that.id) !== -1 || cells.mine.length === 0)) {
             //figure out the mass from the size

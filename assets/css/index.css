@@ -121,7 +121,7 @@ body {
 }
 
 #play-btn {
-    width: 100%;
+    width: 85%;
     float: left;
     margin-top: 2px;
 }
@@ -137,7 +137,9 @@ body {
 }
 
 #spectate-btn {
-    margin-top: -5px;
+    margin-top: 3px;
+    width: 14%;
+    float: right;
 }
 #leaderboardcanvas{
     z-index: 2;

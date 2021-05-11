@@ -46,6 +46,7 @@
     </div>
 </div>
 <div id="overlays">
+
     <div id="helloDialog">
         <form role="form" style="padding: 5px">
             <!--                    <img id="banner" src="assets/img/banner.png" alt="Banner Image"/>-->
@@ -57,8 +58,8 @@
                 <input class="form-control save" data-box-id="0" id="nick" maxlength="15" placeholder="Nick"/>
                 <select class="form-control" id="gamemode" onchange="setserver($(this).val());" required>
                     <option disabled selected>Servers:</option>
-                    <option value="backend.azma.io">AWS</option>
-                    <option value="127.0.0.1:2000">Local</option>
+                    <option value="127.0.0.1:8080">Mainlocal</option>
+                    <option value="127.0.0.1:443">Local</option>
                 </select>
                 <div id="skincontainer">
                     <input class="form-control save" data-box-id="9" id="skinurl" maxlength="120"
@@ -72,22 +73,23 @@
                         type="button">Recorder
                 </button>
                 <button class="btn btn-info btn-settings"
-                        id="settings-btn" onclick="$('#settings, #instructions').toggle(); return false;"><i
-                        class="glyphicon glyphicon-cog"></i>
+                        id="settings-btn" onclick="$('#settings').toggle(); return false;">
+                    <i class="glyphicon glyphicon-cog"></i>
                 </button>
                 <button class="btn btn-play btn-success" id="play-btn"
                         onclick="play(document.getElementById('nick').value,document.getElementById('skinurl').value); return false;"
                         type="button">Play
+                </button>
+
+                <button class="btn btn-warning btn-spectate btn-needs-server" id="spectate-btn"
+                        onclick="spectate(); return false;">
+                        <i class="glyphicon glyphicon-eye-open"></i>
                 </button>
                 <!--                <br clear="both"/>-->
             </div>
 
             <div class="checkbox" id="settings" style="display:none;">
                 <div class="form-group" id="mainform">
-                    <button class="btn btn-warning btn-spectate btn-needs-server" id="spectate-btn"
-                            onclick="spectate(); return false;"
-                            style="width: 100%">Spectate
-                    </button>
                 </div>
                 <div style="margin: 6px;">
                     <label>
@@ -331,7 +333,7 @@
 </canvas>
 <canvas height="600" id="canvas" width="800"></canvas>
 
-<input id="chat_textbox" maxlength="200" placeholder="Press enter to chat" type="text"/>
+<input id="chat_textbox" maxlength="200" placeholder="Press enter to chat" type=/"text"/>
 <div style="font-family:'Ubuntu'">&nbsp;</div>
 
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>

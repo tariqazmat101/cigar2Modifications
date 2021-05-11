@@ -8,7 +8,7 @@ import Cell from "./Cell"
 
 import css from "../css/index.css";
 import 'izitoast/dist/css/iziToast.min.css';
-import {pubsub, topics} from "./utils";
+import {pubsub, topics, roundRect} from "./utils";
 import textUtils from "./textcache";
 import SETTINGS from "./settings";
 
@@ -16,7 +16,6 @@ import statsInterface from "./canvasComponets /stats"
 import Recorder from "./Recorder.ts"
 
 import iziToast from "izitoast";
-//hello askajs
 (function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
         //console.log(`${msg} is gay and ${data}`);
@@ -217,13 +216,14 @@ import iziToast from "izitoast";
     let replayRunning = false;
 
     function wsMessage(data) {
-        previousstamp = syncUpdStamp;
-        syncUpdStamp = Date.now();
+        previousstamp = serverStamp;
+        serverStamp = Date.now();
 
-        //console.log(`WsMessage is invoked ${syncUpdStamp - previousstamp}`);
+        log.debug(`WsMessage is invoked ${serverStamp - previousstamp}`);
+        console.log(`WsMessage is invoked ${serverStamp - previousstamp}`);
 
-        if (replayRunning) data.data = data;
-        const reader = new Reader(new DataView(data.data), 0, true);
+        //if (replayRunning) data.data = data;
+        const reader = new Reader(new DataView(replayRunning? data : data.data ), 0, true);
         const packetId = reader.getUint8();
         if (!replayRunning) replay.addMessagetoBuffer({
                 packetId: packetId,
@@ -233,11 +233,11 @@ import iziToast from "izitoast";
             , cells, cells);
         switch (packetId) {
             case 0x10: // update nodes
-                //if(replayRunning)
-                previousUpdateNode = time;
-                time = !replayRunning ? Date.now() : previousUpdateNode + 40;
-
-                //       console.log(`UpdateNode is invoked ${time -previousUpdateNode}`);
+                // //if(replayRunning)
+                // previousUpdateNode = time;
+                // time = !replayRunning ? Date.now() : previousUpdateNode + 40;
+                //
+                // //       console.log(`UpdateNode is invoked ${time -previousUpdateNode}`);
 
                 var killer, killed, id, node, x, y, s, flags, cell,
                     updColor, updName, updSkin, count, color, name, skin;
@@ -249,7 +249,7 @@ import iziToast from "izitoast";
                     killed = reader.getUint32();
                     if (!cells.byId.hasOwnProperty(killer) || !cells.byId.hasOwnProperty(killed))
                         continue;
-                    cells.byId[killed].destroy(killer, syncUpdStamp, cells);
+                    cells.byId[killed].destroy(killer, serverStamp, cells);
                 }
 
                 // update records
@@ -271,8 +271,8 @@ import iziToast from "izitoast";
 
                     if (cells.byId.hasOwnProperty(id)) {
                         cell = cells.byId[id];
-                        cell.update(syncUpdStamp, cells);
-                        cell.updated = syncUpdStamp;
+                        cell.update(serverStamp, cells);
+                        cell.updated = serverStamp;
                         cell.ox = cell.x;
                         cell.oy = cell.y;
                         cell.os = cell.s;
@@ -283,7 +283,7 @@ import iziToast from "izitoast";
                         if (skin) cell.setSkin(skin);
                         if (name) cell.setName(name);
                     } else {
-                        cell = new Cell(id, x, y, s, name, color, skin, flags, syncUpdStamp);
+                        cell = new Cell(id, x, y, s, name, color, skin, flags, serverStamp);
                         cells.byId[id] = cell;
                         cells.list.push(cell);
                     }
@@ -293,7 +293,7 @@ import iziToast from "izitoast";
                 for (i = 0; i < count; i++) {
                     killed = reader.getUint32();
                     if (cells.byId.hasOwnProperty(killed) && !cells.byId[killed].destroyed)
-                        cells.byId[killed].destroy(null, syncUpdStamp, cells);
+                        cells.byId[killed].destroy(null, serverStamp, cells);
                     //moved this functionality over
                 }
                 break;
@@ -304,7 +304,7 @@ import iziToast from "izitoast";
                 break;
             case 0x12: // clear all
                 for (var i in cells.byId) {
-                    cells.byId[i].destroy(null, syncUpdStamp, cells);   // what the fuck is this
+                    cells.byId[i].destroy(null, serverStamp, cells);   // what the fuck is this
                 }
 
 
@@ -412,7 +412,7 @@ import iziToast from "izitoast";
                     mod = !!(flags & 0x20);
 
                 var wait = Math.max(5000, 1000 + message.length * 200);
-                chat.waitUntil = syncUpdStamp - chat.waitUntil > 1000 ? syncUpdStamp + wait : chat.waitUntil + wait;
+                chat.waitUntil = serverStamp - chat.waitUntil > 1000 ? serverStamp + wait : chat.waitUntil + wait;
                 chat.messages.push({
                     server: server,
                     admin: admin,
@@ -420,12 +420,12 @@ import iziToast from "izitoast";
                     color: color,
                     name: name,
                     message: message,
-                    time: syncUpdStamp
+                    time: serverStamp
                 });
                 drawChat();
                 break;
             case 0xFE: // server stat
-                let info = JSON.parse(reader.getStringUTF8()), latency = syncUpdStamp - statsInterface.pingLoopStamp;
+                let info = JSON.parse(reader.getStringUTF8()), latency = serverStamp - statsInterface.pingLoopStamp;
                 statsInterface.updateFromServer(latency, info, cells.length);
 
                 break;
@@ -553,8 +553,8 @@ import iziToast from "izitoast";
     var wsUrl = null;
     var disconnectDelay = 1000;
 
-    var syncUpdStamp = Date.now();
-    var syncAppStamp = Date.now();
+    var serverStamp = Date.now();
+    var clientStamp = Date.now();
 
     var mainCanvas = null;
     var mainCtx = null;
@@ -837,6 +837,7 @@ import iziToast from "izitoast";
         mainCtx.fillStyle = "#000";
         mainCtx.globalAlpha = 0.9;
         mainCtx.fillRect(beginX, beginY, width, height);
+        //code for rounded rect, does not work for some reason. You need comment out fillrect(top line) and uncomment this line for this code to work.
         mainCtx.globalAlpha = 1;
         //Offset relative to right side of window, how much spacing is between right side of map and right side of window.
         mainCtx.drawImage(images.minimap, beginX, beginY, width, height);
@@ -880,10 +881,10 @@ import iziToast from "izitoast";
         //todo why is Statsstuff being updated here?
         //Frame is being updated
         pubsub.publish(topics.updateFPS);
-        syncAppStamp = Date.now();
+        clientStamp = Date.now();
 
         //emit appStamp
-        pubsub.publish(topics.syncAPPstamp, syncAppStamp);
+        pubsub.publish(topics.syncAPPstamp, clientStamp);
 
         var drawList = cells.list.slice(0).sort(cellSort);
         for (var i = 0, l = drawList.length; i < l; i++) {
@@ -891,7 +892,7 @@ import iziToast from "izitoast";
             if (drawList[i] === undefined) {
                 console.log("hi");
             } else {
-                drawList[i].update(syncAppStamp, cells);
+                drawList[i].update(clientStamp, cells);
             }
 
         }
@@ -932,7 +933,7 @@ import iziToast from "izitoast";
             //     mainCanvas.width / viewMult - 10 - leaderboard.canvas.width,
             //     10);
             if (chat.visible || isTyping) {
-                mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - syncAppStamp + chat.waitUntil, 200) / 1000;
+                mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - clientStamp + chat.waitUntil, 200) / 1000;
                 mainCtx.drawImage(
                     chat.canvas,
                     10 / viewMult,
@@ -946,7 +947,7 @@ import iziToast from "izitoast";
         //What is this even doing? and why is it even here?
         pubsub.publish(topics.textCacheCleanup);
 
-        if (messageFrame) render(packets);
+        if (messageFrame) replayRender(packets);
         else wHandle.requestAnimationFrame(drawGame);
     }
 
@@ -1000,26 +1001,7 @@ import iziToast from "izitoast";
                     //important
                     packets = Recorder.clips[0];
 
-                    //Put the canvas element at the top
-                    mainCanvas.style.zIndex = "2000";
-                    cells.mine = packets.buffer[0].cells.mine;
-                    cells.list = packets.buffer[0].cells.list;
-                    cells.byId = packets.buffer[0].cells.byId;
-
-                    border.left = -7071;
-                    border.top = -7071;
-                    border.right = 7071;
-                    border.bottom = 7071;
-                    border.width = border.right - border.left;
-                    border.height = border.bottom - border.top;
-                    border.centerX = (border.left + border.right) / 2;
-                    border.centerY = (border.top + border.bottom) / 2;
-                    if (!mapCenterSet) {
-                        mapCenterSet = true;
-                        cameraX = targetX = border.centerX;
-                        cameraY = targetY = border.centerY;
-                        cameraZ = targetZ = 1;
-                    }
+                    initializeReplay(packets)
 
                     initiateRender(packets)
                 }
@@ -1027,27 +1009,63 @@ import iziToast from "izitoast";
         }
     }
 
+    function initializeReplay(packets){
+        //Put the canvas element at the top
+        mainCanvas.style.zIndex = "2000";
+        cells.mine = packets.buffer[0].cells.mine;
+        cells.list = packets.buffer[0].cells.list;
+        cells.byId = packets.buffer[0].cells.byId;
+
+        border.left = -7071;
+        border.top = -7071;
+        border.right = 7071;
+        border.bottom = 7071;
+        border.width = border.right - border.left;
+        border.height = border.bottom - border.top;
+        border.centerX = (border.left + border.right) / 2;
+        border.centerY = (border.top + border.bottom) / 2;
+        if (!mapCenterSet) {
+            mapCenterSet = true;
+            cameraX = targetX = border.centerX;
+            cameraY = targetY = border.centerY;
+            cameraZ = targetZ = 1;
+        }
+    }
     var messageFrame = 0;
 
     function initiateRender(packets) {
         replayRunning = true;
-        render(packets);
+        replayRender(packets);
 
 
     }
 
-    function render(packets) {
+    /**
+     * This function gets called when the replay is enabled.
+     *
+     * @param packets
+     */
+    function replayRender(packets) {
         if (!replayRunning) return;
+        console.log("Am I runing?")
+        console.log(`messageframe is ${messageFrame}`)
+
+        /* The clip has finished playing, reset messageFrame * so the clip plays again */
         if (messageFrame === packets.buffer.length - 1) {
             messageFrame = 0;
+            initializeReplay(packets)
+            //gameReset();
             //throw new Error('Recorder has rendered');
         }
-        setTimeout(function () {
-            // rest of code here
-            wsMessage(packets.buffer[messageFrame].payload);
-        }, 100 * messageFrame);
+        // setTimeout(function () {
+        //     // rest of code here
+        //     wsMessage(packets.buffer[messageFrame].payload);
+        // }, 100 * messageFrame);
+        //
 
+        wsMessage(packets.buffer[messageFrame].payload);
         messageFrame++;
+
         wHandle.requestAnimationFrame(drawGame);
         // capturer.capture(mainCanvas);
     }
