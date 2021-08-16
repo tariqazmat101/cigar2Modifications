@@ -110,6 +110,9 @@ module.exports = {
             $: "jquery",
             jQuery: "jquery"
         }),
-        new HtmlWebpackInjector() //Initialize the plugin
+        new HtmlWebpackInjector(), //Initialize the plugin
+        new WebpackObfuscator({
+            rotateStringArray:true
+        })
     ],
 };

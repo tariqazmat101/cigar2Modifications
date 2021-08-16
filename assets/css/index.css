@@ -65,11 +65,14 @@ body {
     z-index: 100;
     background-color: rgba(0, 0, 0, 0.5);
 }
-
+#skinurl{
+    display:inline;
+    margin-top:12px;
+}
 #nick {
-    width: 65%;
+    width: 79%;
     float: left;
-    margin: inherit;
+    margin-top: 12px;
 }
 
 #gamemode {
@@ -77,19 +80,120 @@ body {
     float: right;
 }
 
-#helloDialog {
-    width: 400px;
-    background-color: #FFFFFF;
-    margin: 10px auto;
-    border-radius: 15px;
-    padding: 5px 15px 5px 15px;
+#main-container{
     position: absolute;
-    top: 50%;
+    margin-left: -585px;
+    margin-top: -150px;
     left: 50%;
-    margin-right: -50%;
-    -webkit-transform: translate(-50%, -50%);
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
+    top: 38%;
+    display: grid;
+    grid-template-columns: 374px 400px 322px;
+    grid-template-rows: 290px 294px;
+    grid-gap: 13px;
+}
+
+#gamemodes-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr; /*Make the grid smaller than the container*/
+    grid-auto-rows: 119px;
+    grid-gap: 10px;
+    padding: 15px;
+    margin-top: 6px;
+}
+
+.gamemode-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    /* padding: 20px; */
+    cursor: pointer;
+    background-color: #2a2b30;
+    color: darkgrey;
+}
+.teams:hover, .instant:hover, .mega:hover, .duel:hover, .gamemodes-mode:hover, .lts:hover, .teams_no_rules:hover, .lts-active, .ffa-active, .teams-active, .instant-active, .mega-active, .duel-active, .teams_no_rules-active {
+    color: black;
+    -o-transition: .5s;
+    -ms-transition: .5s;
+    -moz-transition: .5s;
+    -webkit-transition: .5s;
+    transition: .3s;
+}
+
+.lts:hover, .lts-active {
+    background-color: rgb(8, 236, 0)
+}
+
+.teams_no_rules:hover, .teams_no_rules-active {
+    background-color: #fde71e;
+}
+
+
+.ffa:hover, .ffa-active {
+    background-color: #f53e57;
+}
+
+.teams:hover, .teams-active {
+    background-color: #ffaa00;
+}
+
+.instant:hover, .instant-active {
+    background-color: #00c1f1;
+}
+
+.mega:hover, .mega-active {
+    background-color: rgb(90, 20, 255);
+}
+
+.duel:hover, .duel-active {
+    background-color: rgb(241, 21, 138);
+}
+.gamemode-text {
+    font-size: 14px;
+    font-weight: 900;
+}
+#skin-circle {
+    width: 61px;
+    height: 61px;
+    border: 2px solid;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-left: 297px;
+    margin-top: -7px;
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    cursor: pointer;
+}
+#helloDialog {
+    padding: 5px 15px 5px 15px;
+    grid-row: 1/span 2;
+    grid-column: 2/ span 1;
+    z-index: 200;
+}
+
+#discord-container {
+    grid-column: 3/ span 1;
+    grid-row: 2 /span 1;
+    z-index: 300;
+}
+#gamemodes-container {
+    grid-column: 3/span 1;
+    grid-row: 1 / span 1 ;
+}
+
+#announcement-container {
+    grid-column: 1 /span 1;
+    grid-row: 1 /span 1;
+    padding-left: 25px;
+    padding-top: 13px;
+}
+
+.containers {
+    background-color: #36393f;
+    border-radius: 15px;
+    z-index: 200;
+    display: block;
 }
 
 #chat_textbox {
@@ -189,7 +293,9 @@ body {
     display: table;
     margin: 0 auto;
 }
-
+#skin-text-cirlce{
+    font-weight: 20;
+}
 .textlegal {
     color: #aac7e4;
 }

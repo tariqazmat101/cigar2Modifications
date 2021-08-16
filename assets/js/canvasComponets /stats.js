@@ -32,7 +32,7 @@ const statsInterface = {
         }
         mainCtx.font = "20px Ubuntu";
         let gameStatsText = `${~~statState.framesPerSecond} FPS`;
-        if (!isNaN(statState.latency)) gameStatsText += ` ${statState.latency}ms ping`;
+        if (!isNaN(statState.latency)) gameStatsText += ` ${statState.latency}ms`;
         mainCtx.fillText(gameStatsText, 2, height);
         height += 24;
     },
@@ -46,41 +46,45 @@ const statsInterface = {
         var canvas = statState.canvas;
         var ctx = canvas.getContext("2d");
         ctx.font = "14px Ubuntu";
+        var load = parseFloat(statState.info.update) * 2.5;
+        if (statState.info.load) load = parseFloat(statState.info.load);
+        if (statState.info.playersAlive >= 12 && statState.info.playersAlive <= 14) {
+            var fakePlayers = statState.info.playersTotal + 1;
+        } else if (statState.info.playersAlive >= 15 && statState.info.playersAlive <= 17){
+            var fakePlayers = statState.info.playersTotal + 2;
+        } else if (statState.info.playersAlive >= 18 && statState.info.playersAlive <= 20){
+            var fakePlayers = statState.info.playersTotal + 3;
+        } else if (statState.info.playersAlive >= 21 && statState.info.playersAlive <= 23){
+            var fakePlayers = statState.info.playersTotal + 4;
+        } else if (statState.info.playersAlive >= 24 && statState.info.playersAlive <= 26){
+            var fakePlayers = statState.info.playersTotal + 5;
+        } else if (statState.info.playersAlive >= 27){
+            var fakePlayers = statState.info.playersTotal + 6;
+        } else {
+            var fakePlayers = statState.info.playersTotal;
+        }
         var rows = [
-            `${statState.info.name} (${statState.info.mode})`,
-            `${statState.info.playersTotal} / ${statState.info.playersLimit} players`,
+            `${fakePlayers}/250 connections`,
             `${statState.info.playersAlive} playing`,
             `${statState.info.playersSpect} spectating`,
             `${(statState.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(statState.info.uptime)}`,
-            `${(statState.info.mapFull)}% mapFull`,
-            `${cellsLength} Particles `,
+         //   `${(statState.info.mapFull)}% mapFull`,
+          //  `${cellsLength} Particles `,
             //`${statState.info.massDecay.toFixed(3)} Mass Decay`,
-            `40 Mass Decay`,
+           // `40 Mass Decay`,
 
         ];
         var width = 0;
         for (var i = 0; i < rows.length; i++)
             width = Math.max(width, 2 + ctx.measureText(rows[i]).width + 2);
         canvas.width = width;
-        canvas.height = rows.length * (14 + 2);
+        canvas.height = rows.length * (14 + 2) +54;
         ctx.font = "14px Ubuntu";
         ctx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
         ctx.textBaseline = "top";
         let length = cellsLength;
-        for (var i = 0; i < rows.length; i++) {
-            ctx.font = "14px Ubuntu";
-            //On the last row, check if current mass is bigger than the previous value, if yes, then make text green
-            //Other, check if previousmassdecay value is the same as current, if yes, make black
-            //else we assume it is decreasing, so make
-            if (i === rows.length - 2 && length > 500) {
-                let value = ~~(length / 100) - 5;
-                ctx.font = `${14 + value}px Ubuntu`;
-            }
-            //    if (i === rows.length - 1) statState.info.massDecay > previousMassdecay ? ctx.fillStyle = 'green' : previousMassdecay === statState.info.massDecay ? ctx.fillStyle = 'black' : ctx.fillStyle = 'red';
-            ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
-        }
-        //   if (index % 3 === 0) statState.previousMassdecay = statState.info.massDecay;
-        // index++
+        for (var i = 0; i < rows.length; i++)
+            ctx.fillText(rows[i], 2, i * (16) + 54);
     },
 
     checkIfvisible: function () {

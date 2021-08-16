@@ -13,7 +13,7 @@
           name="viewport">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <title>Home - Cigar</title>
+    <title>Azma.io - Better than Roogar and Chogar</title>
 
     <link href="./img/favicon.png" id="favicon" rel="icon" type="image/png"/>
     <link href='https://fonts.googleapis.com/css?family=Ubuntu:700' rel='stylesheet' type='text/css'>
@@ -22,6 +22,7 @@
 
     <script src="https://kit.fontawesome.com/2dda43642d.js" crossorigin="anonymous"></script>
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="js/virus.js"></script>
     <!--    <script type='module' src="js/main_out.js" defer></script>-->
 </head>
 
@@ -45,9 +46,9 @@
         </div>
     </div>
 </div>
-<div id="overlays">
-
-    <div id="helloDialog">
+<div id="overlays" style="display: none;">
+<div id="main-container">
+    <div class="containers" id="helloDialog">
         <form role="form" style="padding: 5px">
             <!--                    <img id="banner" src="assets/img/banner.png" alt="Banner Image"/>-->
             <img alt="Banner Image" id="banner" src="./img/banner.png"/>
@@ -56,11 +57,11 @@
 
             <div class="form-group">
                 <input class="form-control save" data-box-id="0" id="nick" maxlength="15" placeholder="Nick"/>
-                <select class="form-control" id="gamemode" onchange="setserver($(this).val());" required>
-                    <option disabled selected>Servers:</option>
-                    <option value="127.0.0.1:8080">Mainlocal</option>
-                    <option value="127.0.0.1:443">Local</option>
-                </select>
+                <div id="skin-circle">
+                    <div id="skin-text-cirlce">
+                        <b>Skins</b>
+                    </div>
+                </div>
                 <div id="skincontainer">
                     <input class="form-control save" data-box-id="9" id="skinurl" maxlength="120"
                            placeholder="Paste in the skin url here"/>
@@ -69,6 +70,7 @@
             </div>
             <div class="form-group">
 
+                <button class="btn btn-primary btn-needs-server" id="discord-login" onclick="invokePopup()" type="button">Discord Logins </button>
                 <button class="btn btn-primary btn-needs-server" id="replayer-button" onclick="toggleReplayMenu()"
                         type="button">Recorder
                 </button>
@@ -83,38 +85,48 @@
 
                 <button class="btn btn-warning btn-spectate btn-needs-server" id="spectate-btn"
                         onclick="spectate(); return false;">
-                        <i class="glyphicon glyphicon-eye-open"></i>
+                    <i class="glyphicon glyphicon-eye-open"></i>
                 </button>
                 <!--                <br clear="both"/>-->
             </div>
 
-            <div class="checkbox" id="settings" style="display:none;">
+            <div class="checkbox" id="settings" style="display: block; margin-top: 79px;">
                 <div class="form-group" id="mainform">
+                    <div style="margin: 6px;">
+                        <label>
+                            <input class="save" data-box-id="1" onchange="setSkins(!$(this).is(':checked'));"
+                                   type="checkbox"> No skins</label>
+                        <label>
+                            <input class="save" data-box-id="2" onchange="setNames(!$(this).is(':checked'));"
+                                   type="checkbox"> No names</label>
+                        <label>
+                            <input class="save" data-box-id="3" onchange="setDarkTheme($(this).is(':checked'));"
+                                   type="checkbox"> Dark theme</label>
+                        <label>
+                            <input class="save" data-box-id="4" onchange="setColors($(this).is(':checked'));"
+                                   type="checkbox"> No colors</label>
+                        <label>
+                            <input class="save" data-box-id="5" onchange="setShowMass($(this).is(':checked'));"
+                                   type="checkbox"> Show mass</label>
+                        <label>
+                            <input class="save" data-box-id="7" onchange="setChatHide($(this).is(':checked'));"
+                                   type="checkbox"> Hide chat</label>
+                        <label>
+                            <input class="save" data-box-id="8" onchange="setMinimap($(this).is(':checked'));"
+                                   type="checkbox"> Hide minimap</label>
+                        <label>
+                            <input type="checkbox" class="save" data-box-id="morezoom"
+                                   onchange="setMoreZoom($(this).is(':checked'));">
+                            More Zoom</label>
+                        <label>
+                            <input type="checkbox" class="save" data-box-id="mouse"
+                                   onchange="setMouseFeed($(this).is(':checked'));">
+                            Mouse Controls</label>
+                    </div>
                 </div>
-                <div style="margin: 6px;">
-                    <label>
-                        <input class="save" data-box-id="1" onchange="setSkins(!$(this).is(':checked'));"
-                               type="checkbox"> No skins</label>
-                    <label>
-                        <input class="save" data-box-id="2" onchange="setNames(!$(this).is(':checked'));"
-                               type="checkbox"> No names</label>
-                    <label>
-                        <input class="save" data-box-id="3" onchange="setDarkTheme($(this).is(':checked'));"
-                               type="checkbox"> Dark theme</label>
-                    <label>
-                        <input class="save" data-box-id="4" onchange="setColors($(this).is(':checked'));"
-                               type="checkbox"> No colors</label>
-                    <label>
-                        <input class="save" data-box-id="5" onchange="setShowMass($(this).is(':checked'));"
-                               type="checkbox"> Show mass</label>
-                    <label>
-                        <input class="save" data-box-id="7" onchange="setChatHide($(this).is(':checked'));"
-                               type="checkbox"> Hide chat</label>
-                    <label>
-                        <input class="save" data-box-id="8" onchange="setMinimap($(this).is(':checked'));"
-                               type="checkbox"> Hide minimap</label>
-                </div>
+
             </div>
+
         </form>
 
         <div id="instructions">
@@ -127,17 +139,17 @@
         </div>
 
 
-        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-            <input name="cmd" type="hidden" value="_donations"/>
-            <input name="business" type="hidden" value="G95W3KHDHGMWA"/>
-            <input name="item_name" type="hidden" value="Like the server? Donate to to show some support :) "/>
-            <input name="currency_code" type="hidden" value="EUR"/>
-            <input alt="Donate with PayPal button" border="0" id="paypal"
-                   name="submit" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif"
-                   title="PayPal - The safer, easier way to pay online!"
-                   type="image"/>
-            <!--                    <img alt="" border="0" src="https://www.paypal.com/en_CA/i/scr/pixel.gif" width="1" height="1" />-->
-        </form>
+        <!--        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">-->
+        <!--            <input name="cmd" type="hidden" value="_donations"/>-->
+        <!--            <input name="business" type="hidden" value="G95W3KHDHGMWA"/>-->
+        <!--            <input name="item_name" type="hidden" value="Like the server? Donate to to show some support :) "/>-->
+        <!--            <input name="currency_code" type="hidden" value="EUR"/>-->
+        <!--            <input alt="Donate with PayPal button" border="0" id="paypal"-->
+        <!--                   name="submit" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif"-->
+        <!--                   title="PayPal - The safer, easier way to pay online!"-->
+        <!--                   type="image"/>-->
+        <!--            &lt;!&ndash;                    <img alt="" border="0" src="https://www.paypal.com/en_CA/i/scr/pixel.gif" width="1" height="1" />&ndash;&gt;-->
+        <!--        </form>-->
 
 
         <hr/>
@@ -308,22 +320,34 @@
                 </div>
             </div>
         </div>
+        <div id="legal">
+            <a class="textlegal" href="https://www.google.ca/">Privacy Policy</a>
+            <a class="textlegal" href="https://www.google.ca/">Terms of Service</a>
+        </div>
+    </div>
+    <div class="containers" id="announcement-container">
+            <h3>LOGIN</h3>
+            <p style="font-weight: 900; font-size:15px">Coming soon(for real lmao) </p>
+            <p style="font-weight: 900; font-size:15px"></p>
+        <!--            <p style="font-weight: 900; font-size:13px">Azma.io > Roogar.de + Chogar.io. </p>-->
+<!--            <p style="font-weight: 900; font-size:13px">Only true pros play on this game</p>-->
+    </div>
+    <div class="containers" id="gamemodes-container">
+        <div id="gamemodes-grid">
+            <div class="gamemode-box gamemodes-mode teams" onclick="setserver('127.0.0.1:8080')"><span class="gamemode-text">Teams</span></div>
+            <div class="gamemode-box gamemodes-mode lts"><span class="gamemode-text">LTS</span></div>
+            <div style="grid-column: 1 /span2; grid-row: 2/3" class="gamemode-box gamemodes-mode ffa">
+                <span class="gamemode-text">?????</span>
+            </div>
+        </div>
 
     </div>
-
-    <div id="legal">
-        <a class="textlegal" href="https://www.google.ca/">Privacy Policy</a>
-        <a class="textlegal" href="https://www.google.ca/">Terms of Service</a>
+    <div id="discord-container">
+        <a href="https://discord.gg/h3gH64c">
+            <img style="border-radius:15px; margin-bottom:10px;" src="https://discordapp.com/api/guilds/517746729131704320/widget.png?style=banner2">
+        </a>
     </div>
-
 </div>
-
-<div id="connecting">
-    <div style="width: 350px; background-color: #FFFFFF; margin: 100px auto; border-radius: 15px; padding: 5px 15px 5px 15px;">
-        <h2>Connecting</h2>
-        <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the
-            connection.</p>
-    </div>
 </div>
 <div class="btn canvasButtons toggle" id="togglelb" onclick="toggleleaderboard();">
     <i class="fas fa-chart-pie icon-large" id="friendbutton" style="margin-top:5px"></i>
@@ -333,7 +357,7 @@
 </canvas>
 <canvas height="600" id="canvas" width="800"></canvas>
 
-<input id="chat_textbox" maxlength="200" placeholder="Press enter to chat" type=/"text"/>
+<input id="chat_textbox" maxlength="200" placeholder="Press enter to chat" type="text"/>
 <div style="font-family:'Ubuntu'">&nbsp;</div>
 
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>

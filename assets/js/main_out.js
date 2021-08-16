@@ -16,12 +16,14 @@ import statsInterface from "./canvasComponets /stats"
 import Recorder from "./Recorder.ts"
 
 import iziToast from "izitoast";
+import popup from "./popup.ts";
+
 (function (wHandle, wjQuery) {
     var mySubscriber = function (msg, data) {
         //console.log(`${msg} is gay and ${data}`);
     };
     let replay = new Recorder();
-
+    window.addEventListener('contextmenu', event => event.preventDefault());
     //why don't we add (); to mySubscriber function call? we are invoking it,right??
     var token = pubsub.subscribe('x', mySubscriber);
     pubsub.publish('x', 'hello world!');
@@ -134,7 +136,7 @@ import iziToast from "izitoast";
         }
     };
 
-    var wsUrl = null,
+    var wsUrl = "127.0.0.1:8010",
         SKIN_URL = "./skins/",
         USE_HTTPS = "https:" == wHandle.location.protocol,
         PI_2 = Math.PI * 2,
@@ -167,6 +169,7 @@ import iziToast from "izitoast";
             log.debug("ws init on existing conn");
             wsCleanup();
         }
+
         wjQuery("#connecting").show();
         ws = new WebSocket(`ws${USE_HTTPS ? "s" : ""}://${wsUrl = url}`);
         ws.binaryType = "arraybuffer";
@@ -223,7 +226,7 @@ import iziToast from "izitoast";
         console.log(`WsMessage is invoked ${serverStamp - previousstamp}`);
 
         //if (replayRunning) data.data = data;
-        const reader = new Reader(new DataView(replayRunning? data : data.data ), 0, true);
+        const reader = new Reader(new DataView(replayRunning ? data : data.data), 0, true);
         const packetId = reader.getUint8();
         if (!replayRunning) replay.addMessagetoBuffer({
                 packetId: packetId,
@@ -521,7 +524,7 @@ import iziToast from "izitoast";
         centerY: -1
     });
     var minimapNodes = Object.create({
-        nodes: []
+            nodes: []
         }
     );
     var leaderboard = Object.create({
@@ -589,6 +592,9 @@ import iziToast from "izitoast";
         darkTheme: false,
         allowGETipSet: false,
         showBorder: true,
+        moreZoom: false,
+        minZoom: 1,
+        mouseFeed: false
     };
     var pressed = {
         space: false,
@@ -872,6 +878,7 @@ import iziToast from "izitoast";
             var textSize = 12;
             mainCtx.font = `${textSize}px Ubuntu`;
             mainCtx.fillText(cell.name, myPosX, myPosY - 7 - textSize / 2);
+            //hello world
         }
 
         mainCtx.restore();
@@ -908,6 +915,7 @@ import iziToast from "izitoast";
         mainCtx.save();
 
         mainCtx.fillStyle = settings.darkTheme ? "#111" : "#F2FBFF";
+        //C8C8C8
         mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
         // drawBorders(mainCtx);
         if (settings.showGrid) drawGrid();
@@ -1009,7 +1017,7 @@ import iziToast from "izitoast";
         }
     }
 
-    function initializeReplay(packets){
+    function initializeReplay(packets) {
         //Put the canvas element at the top
         mainCanvas.style.zIndex = "2000";
         cells.mine = packets.buffer[0].cells.mine;
@@ -1031,6 +1039,7 @@ import iziToast from "izitoast";
             cameraZ = targetZ = 1;
         }
     }
+
     var messageFrame = 0;
 
     function initiateRender(packets) {
@@ -1087,11 +1096,20 @@ import iziToast from "izitoast";
         syncLoadImages();
 
         function handleScroll(event) {
-            mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
-            1 > mouseZ && (mouseZ = 1);
-            mouseZ > 4 / mouseZ && (mouseZ = 4 / mouseZ);
+            mouseZ -= .1 * (event.wheelDelta / -120 || event.detail || 0);
+            if (settings.moreZoom) {
+                settings.minZoom = .5;
+                mouseZ = Math.round(mouseZ * 10) / 10;
+                console.log(`mouse z is this value: ${mouseZ}`);
+            }
+            settings.minZoom > mouseZ && (mouseZ = settings.minZoom);
+            mouseZ > 8 && (mouseZ = 8);
         }
 
+        setserver();
+
+        let feedMouseIntervalID = 0;
+        let feedKeyIntervalID = 0;
         if (/firefox/i.test(navigator.userAgent))
             document.addEventListener("DOMMouseScroll", handleScroll, false);
         else
@@ -1115,7 +1133,9 @@ import iziToast from "izitoast";
                     break;
                 case 87: // W
                     if (isTyping || escOverlayShown) break;
-                    wsSend(UINT8_CACHE[21]);
+                   feedKeyIntervalID = setInterval(function() {
+                        wsSend(UINT8_CACHE[21]);
+                    },40);
                     pressed.w = true;
                     break;
                 case 81: // Q
@@ -1125,7 +1145,7 @@ import iziToast from "izitoast";
                     break;
                 case 69: // E
                     if (isTyping || escOverlayShown || pressed.e) break;
-                    wsSend(UINT8_CACHE[22]);
+                    wsSend(UINT8_CACHE[21]); //22
                     pressed.e = true;
                     break;
                 case 82: // R
@@ -1158,6 +1178,35 @@ import iziToast from "izitoast";
                     break;
             }
         };
+        mainCanvas.onmousedown = function (e) {
+            /* if (!settings.play && e.button == 0) {
+                pressed.w = true;
+                wsSend(UINT8_CACHE[21]);
+                setTimeout(ejectMass, 40);
+                pressed.w = false
+            } */
+            if (!settings.mouseFeed) {
+                return
+            }
+
+
+            if (e.button == 2) {
+                pressed.w = true;
+                feedMouseIntervalID = setInterval(function() {
+                    wsSend(UINT8_CACHE[21]);
+                }, 40);
+
+            } else if (e.button == 0) {
+                wsSend(UINT8_CACHE[17]);
+}
+        };
+        mainCanvas.onmouseup = function (e) {
+            if (!settings.mouseFeed) return;
+            if (e.button == 2) {
+                pressed.w = false;
+                clearInterval(feedMouseIntervalID);
+            }
+        };
         wHandle.onkeyup = function (event) {
             switch (event.keyCode) {
                 case 32: // space
@@ -1165,6 +1214,7 @@ import iziToast from "izitoast";
                     break;
                 case 87: // W
                     pressed.w = false;
+                    clearInterval(feedKeyIntervalID);
                     break;
                 case 81: // Q
                     if (pressed.q) wsSend(UINT8_CACHE[19]);
@@ -1235,7 +1285,8 @@ import iziToast from "izitoast";
 
     }
 
-    wHandle.setserver = function (arg = 'backend.azma.io') {
+    wHandle.setserver = function (arg = '127.0.0.1:8080') {
+        /*What the fuck is wsUrl supposed to be? It's null*/
         if (wsUrl === arg) return;
         wsInit(arg);
     };
@@ -1259,6 +1310,18 @@ import iziToast from "izitoast";
         settings.showNames = a;
         drawLeaderboard();
     };
+    wHandle.setMoreZoom = function (a) {
+        settings.moreZoom = a;
+        if (settings.moreZoom) {
+            settings.minZoom = .5;
+        } else {
+            settings.minZoom = 1;
+        }
+    };
+
+    wHandle.setMouseFeed = function (a) {
+        settings.mouseFeed = a; }
+
     wHandle.setChatHide = function (a) {
         settings.showChat = !a;
         drawChat();
@@ -1290,8 +1353,13 @@ import iziToast from "izitoast";
         wjQuery(elem).show();
 
     };
-    wHandle;
-    // wHandle.closeReplayWindow() = function() {
+    wHandle.invokePopup = () => {
+        const answer = popup("https://discord.com/api/oauth2/authorize?client_id=734546137830260817&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify")
+            .then(value => {
+               if(value.auth !== null) console.log(`this is the value ${value.auth}`);
+                // expected output: "Success!"
+            });
+    };
     //
     // }
     wHandle.play = function (a, b) {
@@ -1299,5 +1367,16 @@ import iziToast from "izitoast";
         sendSkin(b);
         hideESCOverlay();
     };
+    //
+    // // On Server view after response
+    // wHandle.opener.postMessage(
+    //     { auth: { token: access_token } },
+    //     window.opener.location
+    // );
+    //
+    // wHandle.opener.postMessage(
+    //     { error: 'Login failed' },
+    //     window.opener.location
+    // );
     wHandle.onload = init;
 })(window, $);
