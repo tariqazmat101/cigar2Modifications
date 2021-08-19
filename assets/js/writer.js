@@ -1,6 +1,7 @@
 let __buf = new DataView(new ArrayBuffer(8));
 
 //Writer class
+//hi
 export default class Writer {
     constructor(littleEndian) {
         this._e = littleEndian;
