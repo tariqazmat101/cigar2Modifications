@@ -13,7 +13,8 @@
           name="viewport">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <title>Azma.io - Better than Roogar and Chogar</title>
+<!--    <title>Azma.io - Better than Roogar and Chogar</title>-->
+    <title>Azma.io</title>
 
     <link href="./img/favicon.png" id="favicon" rel="icon" type="image/png"/>
     <link href='https://fonts.googleapis.com/css?family=Ubuntu:700' rel='stylesheet' type='text/css'>
@@ -52,7 +53,8 @@
         <form role="form" style="padding: 5px">
             <!--                    <img id="banner" src="assets/img/banner.png" alt="Banner Image"/>-->
             <img alt="Banner Image" id="banner" src="./img/banner.png"/>
-            <p style="text-align: center; font-style: italic;">Banner made by my niece -Tariq</p>
+<!--            <p style="text-align: center; font-style: italic;">Banner made by my niece -Tariq</p>-->
+            <p style="text-align: center; font-style: italic;">Eat others and climb to the top!</p>
 
 
             <div class="form-group">
@@ -70,7 +72,6 @@
             </div>
             <div class="form-group">
 
-                <button class="btn btn-primary btn-needs-server" id="discord-login" onclick="invokePopup()" type="button">Discord Logins </button>
                 <button class="btn btn-primary btn-needs-server" id="replayer-button" onclick="toggleReplayMenu()"
                         type="button">Recorder
                 </button>
@@ -90,7 +91,7 @@
                 <!--                <br clear="both"/>-->
             </div>
 
-            <div class="checkbox" id="settings" style="display: block; margin-top: 79px;">
+            <div class="checkbox" id="settings" style="display:none; margin-top: 79px;">
                 <div class="form-group" id="mainform">
                     <div style="margin: 6px;">
                         <label>
@@ -124,19 +125,22 @@
                             Mouse Controls</label>
                     </div>
                 </div>
-
+                <div id="footer">
+                    <a class="text-muted" href="http://ogar-teams.fun/1vs1/" title="Whitedeath Server link">WhiteDeath's
+                        server! </a><br>
+                    <a class="text-muted" href="https://discord.gg/XcKgShT" title="Ogar Devs discord link">Ogar Devs</a><br/>
+                </div>
             </div>
-
         </form>
 
-        <div id="instructions">
-            <hr/>
-            <center>
-                    <span class="text-muted">
-                        Like what I'm doing? Buy me a coffee!
-                    </span>
-            </center>
-        </div>
+<!--        <div id="instructions">-->
+<!--            <hr/>-->
+<!--            <center>-->
+<!--                    <span class="text-muted">-->
+<!--                        Like what I'm doing? Buy me a coffee!-->
+<!--                    </span>-->
+<!--            </center>-->
+<!--        </div>-->
 
 
         <!--        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">-->
@@ -152,12 +156,6 @@
         <!--        </form>-->
 
 
-        <hr/>
-        <div id="footer">
-            <a class="text-muted" href="http://ogar-teams.fun/1vs1/" title="Whitedeath Server link">WhiteDeath's
-                server! </a><br>
-            <a class="text-muted" href="https://discord.gg/XcKgShT" title="Ogar Devs discord link">Ogar Devs</a><br/>
-        </div>
     </div>
     <div id="replay-modal" style="display: none">
         <div class="wrapper">
@@ -320,15 +318,12 @@
                 </div>
             </div>
         </div>
-        <div id="legal">
-            <a class="textlegal" href="https://www.google.ca/">Privacy Policy</a>
-            <a class="textlegal" href="https://www.google.ca/">Terms of Service</a>
-        </div>
     </div>
     <div class="containers" id="announcement-container">
             <h3>LOGIN</h3>
-            <p style="font-weight: 900; font-size:15px">Coming soon(for real lmao) </p>
+            <p style="font-weight: 900; font-size:15px">Coming soon </p>
             <p style="font-weight: 900; font-size:15px"></p>
+        <button class="btn btn-primary btn-needs-server" id="discord-login" onclick="invokePopup()" type="button">Discord Login </button>
         <!--            <p style="font-weight: 900; font-size:13px">Azma.io > Roogar.de + Chogar.io. </p>-->
 <!--            <p style="font-weight: 900; font-size:13px">Only true pros play on this game</p>-->
     </div>
@@ -348,6 +343,12 @@
         </a>
     </div>
 </div>
+
+    <div id="legal">
+        <a class="textlegal" href="https://www.google.ca/">Privacy Policy</a>
+        <a class="textlegal" href="https://www.google.ca/">Terms of Service</a>
+    </div>
+
 </div>
 <div class="btn canvasButtons toggle" id="togglelb" onclick="toggleleaderboard();">
     <i class="fas fa-chart-pie icon-large" id="friendbutton" style="margin-top:5px"></i>
