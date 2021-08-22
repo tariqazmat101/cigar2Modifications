@@ -3,7 +3,7 @@
   phases:
     pre_build:
       commands:
-        aws s3 rm --recursive s3://azma.io
+        aws s3 rm  --recursive s3://azma.io --exclude "azma/afterAUTH.html"
     build:
       commands:
 

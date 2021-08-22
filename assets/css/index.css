@@ -390,6 +390,54 @@ body {
 
 }
 
+.avatar{
+    width: 80px;
+    margin-right: 7px;
+    box-shadow: 0 0 3px 1px #000;
+    border-radius: 4px;
+}
+
+.player-info{
+    display: inline-block;
+    vertical-align: top;
+    font-size: 14px;
+}
+
+.logout {
+    cursor: pointer;
+    display: inline-block;
+    position: absolute;
+    top: 14px;
+    left: 288px;;
+}
+
+.progress {
+    padding: 5px;
+    background: rgba(0,0,0,.5);
+    border-radius: 6px;
+}
+.progress-bar{
+    width:0%;
+    background: repeating-linear-gradient(-45deg,orange,orange 40px,#ffc04d 0,#ffc04d 80px);
+    height: 20px;
+    border-radius: 4px;
+}
+
+.xp-progress{
+    margin-left: -2px;
+    margin-right: 10px;
+}
+
+.fa .fas {
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 800;
+}
 
 @keyframes spin {
     0% {

@@ -54,10 +54,18 @@ const popup = (url) => {
             return;
         }
         if (!authWindow) return;
-        if (authWindow.window.location.hostname === "localhost") {
+        if (authWindow.window.location == null) return;
+
+        try {
+            authWindow.window.location.hostname
+        }
+        catch (e){
+            return
+        }
+        // @ts-ignore
+        if (authWindow.window.location.hostname === HOSTNAME) {
             const params = new URLSearchParams(authWindow.window.location.search);
            const code =  params.get("code");
-
 
             authWindow.opener.postMessage({auth:code}, authWindow.opener.location);
             clearInterval(scanTimer);

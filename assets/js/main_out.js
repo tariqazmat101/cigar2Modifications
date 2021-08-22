@@ -1133,9 +1133,9 @@ import popup from "./popup.ts";
                     break;
                 case 87: // W
                     if (isTyping || escOverlayShown) break;
-                   feedKeyIntervalID = setInterval(function() {
+                    feedKeyIntervalID = setInterval(function () {
                         wsSend(UINT8_CACHE[21]);
-                    },40);
+                    }, 40);
                     pressed.w = true;
                     break;
                 case 81: // Q
@@ -1192,13 +1192,13 @@ import popup from "./popup.ts";
 
             if (e.button == 2) {
                 pressed.w = true;
-                feedMouseIntervalID = setInterval(function() {
+                feedMouseIntervalID = setInterval(function () {
                     wsSend(UINT8_CACHE[21]);
                 }, 40);
 
             } else if (e.button == 0) {
                 wsSend(UINT8_CACHE[17]);
-}
+            }
         };
         mainCanvas.onmouseup = function (e) {
             if (!settings.mouseFeed) return;
@@ -1320,7 +1320,8 @@ import popup from "./popup.ts";
     };
 
     wHandle.setMouseFeed = function (a) {
-        settings.mouseFeed = a; }
+        settings.mouseFeed = a;
+    }
 
     wHandle.setChatHide = function (a) {
         settings.showChat = !a;
@@ -1353,30 +1354,22 @@ import popup from "./popup.ts";
         wjQuery(elem).show();
 
     };
+    // let x = HOSTNAME;
+    if (!PRODUCTION) {
+        console.log(APIURL);
+        console.log(`Hostname is: ${HOSTNAME}`);
+    }
     wHandle.invokePopup = () => {
-        const answer = popup("https://discord.com/api/oauth2/authorize?client_id=734546137830260817&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify")
+        const answer = popup(APIURL) // <-- generate a random string and attach it those url as a state paramater, on the response, we check the state paramater.
             .then(value => {
-               if(value.auth !== null) console.log(`this is the value ${value.auth}`);
+                if (value.auth !== null) console.log(`this is the value ${value.auth}`);
                 // expected output: "Success!"
             });
     };
-    //
-    // }
     wHandle.play = function (a, b) {
         sendPlay(a);
         sendSkin(b);
         hideESCOverlay();
     };
-    //
-    // // On Server view after response
-    // wHandle.opener.postMessage(
-    //     { auth: { token: access_token } },
-    //     window.opener.location
-    // );
-    //
-    // wHandle.opener.postMessage(
-    //     { error: 'Login failed' },
-    //     window.opener.location
-    // );
     wHandle.onload = init;
 })(window, $);
