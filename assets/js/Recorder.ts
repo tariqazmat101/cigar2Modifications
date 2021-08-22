@@ -11,7 +11,7 @@ const DRAWPACKET = 0x10;
  * Each dataFrame is mapped to a websocket message.
  */
 
-//lovely message 
+//lovely message
 //todo enforce this as a singleton class
 /**
  * dataFrame object represents a single websocket message.
