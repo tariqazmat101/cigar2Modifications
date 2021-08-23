@@ -75,5 +75,5 @@ const popup = (url) => {
     }, 100)
     return authPromise;
 };
-//delete this later 
+//delete this laters
 export default popup;
